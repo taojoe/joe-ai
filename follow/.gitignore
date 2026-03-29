@@ -1,0 +1,13 @@
+node_modules/
+.env
+
+# Skill outputs (content is generated, not source)
+**/output/*.md
+!**/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Bun
+bun.lockb

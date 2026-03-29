@@ -1,0 +1,24 @@
+{
+  "name": "therundown-ai",
+  "displayName": "The Rundown AI",
+  "source": {
+    "type": "rss",
+    "url": "https://rss.beehiiv.com/feeds/2R3C6Bt5wj.xml",
+    "platform": "beehiiv"
+  },
+  "content": {
+    "sourceName": "The Rundown AI",
+    "baseUrl": "https://www.therundown.ai",
+    "sponsorPatterns": [
+      "TOGETHER WITH",
+      "PRESENTED BY"
+    ],
+    "removeSections": [
+      "SPONSORED"
+    ]
+  },
+  "output": {
+    "dir": "output",
+    "format": "markdown"
+  }
+}
