@@ -31,7 +31,7 @@ bun run skills/therundown-ai/scripts/run.js --limit 5
 每篇 newsletter 输出为一个 Markdown 文件：
 
 ```
-output/
+output/therundown-ai/
   2026-03-28-meta-new-open-source-brain-ai.md
   2026-03-27-arc-agi-3-resets-frontier-ai-scoreboard.md
   ...
