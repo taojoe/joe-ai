@@ -5,9 +5,11 @@
   "type": "module",
   "scripts": {
     "therundown-ai": "bun run skills/therundown-ai/scripts/run.js",
-    "superhuman-ai": "bun run skills/superhuman-ai/scripts/run.js"
+    "superhuman-ai": "bun run skills/superhuman-ai/scripts/run.js",
+    "superhuman-ai-browser": "node skills/superhuman-ai-browser/scripts/run.js"
   },
   "dependencies": {
+    "@different-ai/opencode-browser": "^4.6.1",
     "cheerio": "^1.0.0",
     "handlebars": "^4.7.8",
     "rss-parser": "^3.13.0"

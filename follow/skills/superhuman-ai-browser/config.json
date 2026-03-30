@@ -1,0 +1,26 @@
+{
+  "name": "superhuman-ai-browser",
+  "displayName": "Superhuman AI Browser",
+  "source": {
+    "type": "web",
+    "url": "https://www.superhuman.ai",
+    "platform": "beehiiv"
+  },
+  "content": {
+    "sourceName": "Superhuman AI",
+    "author": "Zain Kahn",
+    "baseUrl": "https://www.superhuman.ai",
+    "sponsorPatterns": [
+      "PRESENTED BY",
+      "SPONSORED BY",
+      "ADVERTISEMENT"
+    ],
+    "removeSections": [
+      "SPONSORED"
+    ]
+  },
+  "output": {
+    "dir": "../../output/superhuman-ai-browser",
+    "format": "markdown"
+  }
+}
