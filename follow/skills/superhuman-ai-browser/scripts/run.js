@@ -73,6 +73,9 @@ async function main() {
   logger.divider();
   logger.success(`Done! Saved: ${saved}, Skipped: ${skipped}, Total: ${articles.length}`);
   logger.divider();
+  
+  // 显式退出进程，因为 opencode-browser 的 socket 连接可能会保持活动状态阻止进程自然结束
+  process.exit(0);
 }
 
 main().catch((error) => {
