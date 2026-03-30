@@ -37,10 +37,13 @@ async function main() {
   logger.info(`Found ${articles.length} articles from homepage/archive`);
   logger.divider();
 
+  // 反转列表：按时间正序处理（最旧的在前）
+  articles.reverse();
+  logger.info(`Processing in chronological order (oldest first)`);
+
   // 处理每篇文章
   let saved = 0;
   let skipped = 0;
-  let consecutiveExisting = 0;
 
   for (let i = 0; i < articles.length; i++) {
     const article = articles[i];
@@ -49,21 +52,11 @@ async function main() {
     const fileName = existingFiles.find(f => f.endsWith(`-${article.slug}.md`));
 
     if (fileName) {
-      logger.skip(`Already processed: ${fileName} (Skipping browser load)`);
-      skipped++;
-      consecutiveExisting++;
-      
-      // 如果连续发现已处理的文章，且不是强制模式，则认为已到达上次抓取的断点
-      // Beehiiv 列表是倒序的（最新在前），所以一旦撞到旧的，后面的通常也都是旧的
-      if (consecutiveExisting >= 3) {
-        logger.info(`Reached previously processed content. Stopping loop.`);
-        break;
-      }
-      continue;
+      // 按时间正序处理，遇到已存在的文章说明后面更新的也一定已处理过
+      logger.info(`Reached previously processed: ${fileName} — all caught up!`);
+      skipped = articles.length - i;
+      break;
     }
-
-    // 重置连续计数
-    consecutiveExisting = 0;
 
     try {
       const { slug, markdown, meta } = await parseArticle(article, config.content.sourceName);
