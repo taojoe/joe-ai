@@ -46,8 +46,8 @@ export async function parseArticle(listing, sourceName = 'Superhuman AI') {
   // 使用 Superhuman AI 专用解析器清洗内容
   const cleaned = cleanSuperhumanContent(contentHtml);
 
-  // 生成文件名
-  const slug = generateSlug(title, dateStr);
+  // 使用从 URL 提取的原始 slug，保证文件名 100% 可预测
+  const slug = `${dateStr}-${listing.slug}`;
 
   // 格式化为 Markdown
   const markdown = formatArticle({
@@ -282,7 +282,7 @@ function isDuplicateContent(text, contents) {
 /**
  * 尝试将模糊日期字符串解析为 YYYY-MM-DD
  */
-function parseFuzzyDate(rawDate) {
+export function parseFuzzyDate(rawDate) {
   if (!rawDate) return new Date().toISOString().slice(0, 10);
 
   const parsed = new Date(rawDate);

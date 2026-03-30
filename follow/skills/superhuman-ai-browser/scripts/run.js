@@ -6,6 +6,8 @@ import { parseArticle } from './parse-article.js';
 import { ensureDir, writeArticle, getExistingFiles } from '../utils/file-manager.js';
 import { logger } from '../utils/logger.js';
 import { sleep } from '../utils/web-scraper.js';
+import { generateSlug } from '../utils/markdown-formatter.js';
+import { parseFuzzyDate } from './parse-article.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const config = JSON.parse(readFileSync(join(__dirname, '..', 'config.json'), 'utf-8'));
@@ -38,20 +40,34 @@ async function main() {
   // 处理每篇文章
   let saved = 0;
   let skipped = 0;
+  let consecutiveExisting = 0;
 
   for (let i = 0; i < articles.length; i++) {
     const article = articles[i];
+    
+    // 提前检查：直接检查本地是否有包含该 slug 的文件
+    const fileName = existingFiles.find(f => f.endsWith(`-${article.slug}.md`));
+
+    if (fileName) {
+      logger.skip(`Already processed: ${fileName} (Skipping browser load)`);
+      skipped++;
+      consecutiveExisting++;
+      
+      // 如果连续发现已处理的文章，且不是强制模式，则认为已到达上次抓取的断点
+      // Beehiiv 列表是倒序的（最新在前），所以一旦撞到旧的，后面的通常也都是旧的
+      if (consecutiveExisting >= 3) {
+        logger.info(`Reached previously processed content. Stopping loop.`);
+        break;
+      }
+      continue;
+    }
+
+    // 重置连续计数
+    consecutiveExisting = 0;
+
     try {
       const { slug, markdown, meta } = await parseArticle(article, config.content.sourceName);
-      const fileName = `${slug}.md`;
-      const filePath = join(outputDir, fileName);
-
-      // 检查是否已存在
-      if (existingFiles.includes(fileName)) {
-        logger.skip(`Already exists: ${fileName}`);
-        skipped++;
-        continue;
-      }
+      const filePath = join(outputDir, `${slug}.md`);
 
       // 保存文件
       const written = writeArticle(filePath, markdown);
@@ -71,7 +87,7 @@ async function main() {
 
   // 汇总
   logger.divider();
-  logger.success(`Done! Saved: ${saved}, Skipped: ${skipped}, Total: ${articles.length}`);
+  logger.success(`Done! Saved: ${saved}, Skipped: ${skipped}, Scanned: ${articles.length}`);
   logger.divider();
   
   // 显式退出进程，因为 opencode-browser 的 socket 连接可能会保持活动状态阻止进程自然结束
