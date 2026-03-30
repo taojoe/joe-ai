@@ -4,7 +4,8 @@
   "description": "Agent Skills for fetching and organizing content from information sources",
   "type": "module",
   "scripts": {
-    "therundown-ai": "bun run skills/therundown-ai/scripts/run.js"
+    "therundown-ai": "bun run skills/therundown-ai/scripts/run.js",
+    "superhuman-ai": "bun run skills/superhuman-ai/scripts/run.js"
   },
   "dependencies": {
     "cheerio": "^1.0.0",
