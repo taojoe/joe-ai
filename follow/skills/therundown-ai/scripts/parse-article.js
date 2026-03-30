@@ -1,5 +1,5 @@
-import { cleanContent } from '../../../shared/utils/content-cleaner.js';
-import { formatArticle, generateSlug } from '../../../shared/utils/markdown-formatter.js';
+import { cleanContent } from '../utils/content-cleaner.js';
+import { formatArticle, generateSlug } from '../utils/markdown-formatter.js';
 
 /**
  * 解析单篇 RSS 文章，清洗并格式化

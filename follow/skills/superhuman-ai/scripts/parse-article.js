@@ -1,6 +1,6 @@
-import { fetchHtml, extractJsonLd, extractContentHtml, sleep } from '../../../shared/utils/web-scraper.js';
-import { formatArticle, generateSlug } from '../../../shared/utils/markdown-formatter.js';
-import { logger } from '../../../shared/utils/logger.js';
+import { fetchHtml, extractJsonLd, extractContentHtml, sleep } from '../utils/web-scraper.js';
+import { formatArticle, generateSlug } from '../utils/markdown-formatter.js';
+import { logger } from '../utils/logger.js';
 import * as cheerio from 'cheerio';
 
 /**

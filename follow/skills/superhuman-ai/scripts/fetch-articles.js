@@ -1,4 +1,4 @@
-import { collectListings } from '../../../shared/utils/web-scraper.js';
+import { collectListings } from '../utils/web-scraper.js';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';

@@ -3,8 +3,8 @@ import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
 import { fetchArticles } from './fetch-articles.js';
 import { parseArticle } from './parse-article.js';
-import { ensureDir, writeArticle, getExistingFiles } from '../../../shared/utils/file-manager.js';
-import { logger } from '../../../shared/utils/logger.js';
+import { ensureDir, writeArticle, getExistingFiles } from '../utils/file-manager.js';
+import { logger } from '../utils/logger.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const config = JSON.parse(readFileSync(join(__dirname, '..', 'config.json'), 'utf-8'));
