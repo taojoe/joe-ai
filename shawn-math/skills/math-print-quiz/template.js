@@ -60,7 +60,9 @@ function renderMath(text) {
  */
 function renderFormula(formula) {
   try {
-    return katex.renderToString(formula, { displayMode: true, throwOnError: false });
+    // Safely strip leading/trailing $ or $$ if the AI accidentally included them
+    const cleanFormula = formula.replace(/^\$\$?/, '').replace(/\$\$?$/, '').trim();
+    return katex.renderToString(cleanFormula, { displayMode: true, throwOnError: false });
   } catch (e) {
     console.warn(`KaTeX formula render error: ${formula}`, e.message);
     return `<span class="katex-error">${formula}</span>`;
