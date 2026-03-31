@@ -3,46 +3,65 @@ name: math-print-quiz
 description: 生成 A4 可打印的数学知识 + 小测验 PDF
 ---
 
-# Math Print Quiz
+# Math Print Quiz Skill 指南
 
-生成包含数学知识讲解和练习题的 A4 可打印 PDF。
+这个 Skill 用于帮助用户生成定制化的、A4 纸打印的数学知识讲解与小测验 PDF 文件。你需要作为一个教育辅助助手，引导用户生成高质量的内容。
 
-## 功能
+## 🎯 工作流程 (Workflow)
 
-- **第 1 页**: 知识讲解（≤ 1/3 版面）+ 练习题（≈ 2/3 版面）
-- **第 2 页**: 答案与详细解析
+请严格按照以下步骤执行此 Skill：
 
-## 支持的题目类型
+### Step 1: 需求讨论与主题确认
+- **主动与用户沟通**：询问用户希望生成什么数学知识点的数据（例如：平方差公式、二次根式、一元二次方程等）。
+- 确认要测试的范围、学生的年级水平以及是否需要特定类型的题目（如画图题）。
+- **等待用户回复**，不要在没有明确主题的情况下生成数据。
 
-1. **选择题** (multiple-choice) — 带 A/B/C/D 选项
-2. **简答题** (short-answer) — 题目 + 留白答题区域
-3. **画图题** (drawing) — 题目说明 + 坐标系/网格
+### Step 2: 构思与生成 JSON 数据
+在确认知识点后，你需要帮用户构思内容并生成对应的 JSON 配置文件（存放在 `data/<文件名>.json`）。生成的数据必须严格遵守以下**内容生成标准**：
 
-## 数据格式
+1. **整体篇幅约定**：输出必须适配单面 A4 纸排版（附加一页独立的答案解析页）。
+2. **第一部分：知识讲解 (≤ 1/3 版面)**
+   - 简明扼要地讲解该知识点（例如：简单讲解平方差公式）。
+   - 内容精炼，控制字数和公式数量，确保生成的 PDF 中这部分不超过 1/3 的版面。
+3. **第二部分：练习题 (≈ 2/3 版面)**
+   - **严格限制题目数量**：只能生成 **2～3 道** 题目，以确保每道题目有**足够的留白供孩子答题、演算或画图**。
+   - **题目形式要求**：可以是选择题 (multiple-choice)、简答/计算题 (short-answer)，也可以是画图题 (drawing)（例如：引导孩子在坐标系或留白中画出二次根式的图像）。题目说明必须非常清晰。
+4. **答案与解析**
+   - 为每道题提供详尽的答案和解题过程，这部分内容会自动生成在 PDF 的第 2 页，不影响第 1 页的排版。
 
-每份练习对应一个 JSON 文件，存放在 `data/` 目录下。
-
-### 字段说明
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `title` | string | 知识点中文标题 |
-| `subtitle` | string | 英文副标题 |
-| `knowledge.description` | string | 知识说明 (支持 LaTeX: `$...$`) |
-| `knowledge.formulas` | string[] | 核心公式 (LaTeX) |
-| `knowledge.keyPoints` | string[] | 关键要点 |
-| `questions[].type` | string | `multiple-choice` / `short-answer` / `drawing` |
-| `questions[].question` | string | 题目内容 (支持 LaTeX) |
-| `questions[].options` | string[] | 选项 (仅选择题) |
-| `questions[].hint` | string | 提示信息 |
-| `questions[].answer` | string | 正确答案 |
-| `questions[].explanation` | string | 解题过程 (支持 LaTeX) |
-
-## 使用方法
-
+### Step 3: 运行生成命令
+当你完成了 JSON 文件的生成或更新后，你需要告诉用户即将运行脚本生成 PDF，并执行以下命令：
 ```bash
-bun run quiz -- <json-file-name>
-# 例: bun run quiz -- difference-of-squares
+bun run quiz -- <json-file-name-without-ext>
+# 例: 如果生成了 data/difference-of-squares.json
+# 则运行: bun run quiz -- difference-of-squares
 ```
 
-输出: `output/math-print-quiz/<json-file-name>.pdf`
+---
+
+## 📄 数据格式参考 (`data/*.json`)
+
+你在 Step 2 中生成的文件必须符合以下结构：
+
+```json
+{
+  "title": "知识点中文标题",
+  "subtitle": "英文副标题 (可选)",
+  "knowledge": {
+    "description": "知识说明 (支持 LaTeX: $...$)",
+    "formulas": ["核心公式1 (LaTeX)", "核心公式2 (LaTeX)"],
+    "keyPoints": ["关键要点1", "关键要点2"]
+  },
+  "questions": [
+    {
+      "type": "multiple-choice | short-answer | drawing",
+      "question": "题目内容 (支持 LaTeX)",
+      "options": ["A. 选项", "B. 选项", "C. 选项", "D. 选项"], 
+      "hint": "提示信息 (可选)",
+      "answer": "正确答案",
+      "explanation": "详细解题过程 (支持 LaTeX)"
+    }
+    // 注意：这里的题目数量必须是 2 到 3 个！
+  ]
+}
+```
