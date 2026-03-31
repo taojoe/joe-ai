@@ -584,4 +584,46 @@ body {
   .answer-item {
     page-break-inside: avoid;
   }
+
+  /* --- Aggressive SVG Axis Fixes for Print --- */
+  .math-graph-container svg,
+  .function-plot svg {
+    visibility: visible !important;
+  }
+  
+  .function-plot .axis path,
+  .function-plot .axis line,
+  .function-plot .domain,
+  .function-plot .tick line,
+  .function-plot .tick {
+    stroke: #4a5568 !important;
+    stroke-opacity: 1 !important;
+    stroke-width: 1px !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  .function-plot .axis text,
+  .function-plot .tick text,
+  .math-graph-container text {
+    fill: #1a202c !important;
+    fill-opacity: 1 !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    opacity: 1 !important;
+    stroke: none !important;
+    visibility: visible !important;
+  }
+}
+
+/* --- Function Plot SVG Fix for Puppeteer / Print Mode --- */
+/* Ensure SVG text (coordinate numbers) does not disappear during print */
+.math-graph-container svg text,
+.function-plot text {
+  font-family: sans-serif !important;
+  fill: #4a5568 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  font-size: 10px !important;
 }
