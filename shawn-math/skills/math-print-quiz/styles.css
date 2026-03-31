@@ -1,0 +1,548 @@
+/* ============================================
+   Shawn Math - A4 Print Quiz Styles
+   ============================================ */
+
+/* --- Fonts --- */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* --- CSS Variables --- */
+:root {
+  --color-primary: #1a365d;
+  --color-primary-light: #2b6cb0;
+  --color-accent: #3182ce;
+  --color-accent-soft: #ebf4ff;
+  --color-text: #1a202c;
+  --color-text-secondary: #4a5568;
+  --color-border: #cbd5e0;
+  --color-border-light: #e2e8f0;
+  --color-bg-knowledge: #f0f7ff;
+  --color-bg-question: #ffffff;
+  --color-success: #276749;
+  --color-success-bg: #f0fff4;
+  --color-option-border: #a0aec0;
+  --color-hint: #6b46c1;
+  --color-hint-bg: #faf5ff;
+
+  --font-cn: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-en: 'Inter', sans-serif;
+  --font-math: 'KaTeX_Main', serif;
+
+  --page-width: 210mm;
+  --page-height: 297mm;
+  --margin-top: 15mm;
+  --margin-bottom: 15mm;
+  --margin-left: 18mm;
+  --margin-right: 18mm;
+}
+
+/* --- Reset & Base --- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 12pt;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+body {
+  font-family: var(--font-cn);
+  color: var(--color-text);
+  line-height: 1.6;
+  background: white;
+}
+
+/* --- Page Setup --- */
+@page {
+  size: A4;
+  margin: var(--margin-top) var(--margin-right) var(--margin-bottom) var(--margin-left);
+}
+
+.page {
+  width: 174mm; /* 210 - 18 - 18 */
+  min-height: 267mm; /* 297 - 15 - 15 */
+  max-height: 267mm;
+  overflow: hidden;
+  position: relative;
+  page-break-after: always;
+  display: flex;
+  flex-direction: column;
+}
+
+.page:last-child {
+  page-break-after: auto;
+}
+
+/* --- Header --- */
+.page-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 5mm;
+  padding-bottom: 3mm;
+  border-bottom: 2.5px solid var(--color-primary);
+}
+
+.page-header .title {
+  font-size: 18pt;
+  font-weight: 700;
+  color: var(--color-primary);
+  letter-spacing: 1px;
+}
+
+.page-header .subtitle {
+  font-family: var(--font-en);
+  font-size: 11pt;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.page-header .page-label {
+  margin-left: auto;
+  font-size: 9pt;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+/* --- Knowledge Section --- */
+.knowledge-section {
+  background: var(--color-bg-knowledge);
+  border: 1px solid var(--color-border-light);
+  border-left: 4px solid var(--color-accent);
+  border-radius: 6px;
+  padding: 4mm 5mm;
+  margin-bottom: 5mm;
+  max-height: 33%; /* 不超过 1/3 版面 */
+  overflow: hidden;
+}
+
+.knowledge-section .section-label {
+  font-size: 9pt;
+  font-weight: 600;
+  color: var(--color-accent);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 2mm;
+}
+
+.knowledge-section .description {
+  font-size: 10.5pt;
+  line-height: 1.7;
+  color: var(--color-text);
+  margin-bottom: 3mm;
+}
+
+.formula-box {
+  background: white;
+  border: 1px solid var(--color-border-light);
+  border-radius: 4px;
+  padding: 3mm 4mm;
+  margin: 3mm 0;
+  text-align: center;
+}
+
+.formula-box .katex {
+  font-size: 14pt;
+}
+
+.key-points {
+  margin-top: 2mm;
+}
+
+.key-points li {
+  font-size: 10pt;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  margin-bottom: 1mm;
+  padding-left: 2mm;
+  list-style: none;
+  position: relative;
+}
+
+.key-points li::before {
+  content: '▸';
+  color: var(--color-accent);
+  position: absolute;
+  left: -3mm;
+  font-weight: bold;
+}
+
+.example-box {
+  background: white;
+  border: 1px dashed var(--color-border);
+  border-radius: 4px;
+  padding: 2mm 4mm;
+  margin-top: 2mm;
+}
+
+.example-box .example-label {
+  font-size: 8pt;
+  font-weight: 600;
+  color: var(--color-accent);
+  margin-bottom: 1mm;
+}
+
+.example-box .example-content {
+  font-size: 10pt;
+  text-align: center;
+}
+
+.example-box .example-note {
+  font-size: 9pt;
+  color: var(--color-text-secondary);
+  text-align: center;
+  margin-top: 1mm;
+}
+
+/* --- Questions Section --- */
+.questions-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: 3mm;
+  margin-bottom: 4mm;
+}
+
+.section-divider::before,
+.section-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+
+.section-divider .label {
+  font-size: 10pt;
+  font-weight: 600;
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+
+/* --- Question Item --- */
+.question-item {
+  flex: 1;
+  margin-bottom: 4mm;
+  display: flex;
+  flex-direction: column;
+}
+
+.question-item:last-child {
+  margin-bottom: 0;
+}
+
+.question-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 3mm;
+  margin-bottom: 2mm;
+}
+
+.question-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 7mm;
+  height: 7mm;
+  min-width: 7mm;
+  background: var(--color-primary);
+  color: white;
+  font-family: var(--font-en);
+  font-size: 10pt;
+  font-weight: 700;
+  border-radius: 50%;
+}
+
+.question-text {
+  font-size: 11pt;
+  font-weight: 500;
+  color: var(--color-text);
+  line-height: 1.6;
+  padding-top: 0.5mm;
+}
+
+.question-type-badge {
+  font-size: 7pt;
+  font-weight: 600;
+  padding: 0.5mm 2mm;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+.question-type-badge.choice {
+  background: #ebf4ff;
+  color: #2b6cb0;
+}
+
+.question-type-badge.short-answer {
+  background: #fefcbf;
+  color: #975a16;
+}
+
+.question-type-badge.drawing {
+  background: #e6fffa;
+  color: #234e52;
+}
+
+/* --- Multiple Choice Options --- */
+.options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2mm 4mm;
+  margin-left: 10mm;
+  margin-bottom: 2mm;
+}
+
+.option-item {
+  display: flex;
+  align-items: center;
+  gap: 2.5mm;
+  padding: 2mm 3mm;
+  border: 1.5px solid var(--color-option-border);
+  border-radius: 20px;
+  font-size: 10.5pt;
+  cursor: default;
+  transition: none;
+}
+
+.option-letter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 6mm;
+  height: 6mm;
+  min-width: 6mm;
+  border: 1.5px solid var(--color-option-border);
+  border-radius: 50%;
+  font-family: var(--font-en);
+  font-size: 9pt;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+}
+
+.option-content {
+  font-size: 10.5pt;
+  line-height: 1.4;
+}
+
+/* --- Hint --- */
+.question-hint {
+  margin-left: 10mm;
+  margin-top: 2mm;
+  padding: 2mm 3mm;
+  background: var(--color-hint-bg);
+  border-left: 3px solid var(--color-hint);
+  border-radius: 0 4px 4px 0;
+  font-size: 9pt;
+  color: var(--color-hint);
+  font-style: italic;
+}
+
+/* --- Answer Space --- */
+.answer-space {
+  flex: 1;
+  min-height: 20mm;
+  margin-left: 10mm;
+  margin-top: 2mm;
+  border: 1px dashed var(--color-border-light);
+  border-radius: 4px;
+  position: relative;
+}
+
+.answer-space::after {
+  content: '作答区域';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 9pt;
+  color: #e2e8f0;
+  letter-spacing: 4px;
+}
+
+/* --- Drawing Grid --- */
+.drawing-grid {
+  flex: 1;
+  min-height: 50mm;
+  margin-left: 10mm;
+  margin-top: 2mm;
+  border: 1px solid var(--color-border-light);
+  border-radius: 4px;
+  background-image:
+    linear-gradient(var(--color-border-light) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-border-light) 1px, transparent 1px);
+  background-size: 5mm 5mm;
+  position: relative;
+}
+
+/* --- Footer --- */
+.page-footer {
+  margin-top: auto;
+  padding-top: 2mm;
+  border-top: 1px solid var(--color-border-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 8pt;
+  color: var(--color-text-secondary);
+}
+
+.page-footer .brand {
+  font-family: var(--font-en);
+  font-weight: 600;
+  color: var(--color-primary);
+  letter-spacing: 1px;
+}
+
+.page-footer .date {
+  font-family: var(--font-en);
+}
+
+/* ============================================
+   Page 2: Answer & Explanation
+   ============================================ */
+
+.answer-page-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 5mm;
+  padding-bottom: 3mm;
+  border-bottom: 2.5px solid var(--color-success);
+}
+
+.answer-page-header .title {
+  font-size: 16pt;
+  font-weight: 700;
+  color: var(--color-success);
+  letter-spacing: 1px;
+}
+
+.answer-page-header .subtitle {
+  font-family: var(--font-en);
+  font-size: 11pt;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.answer-page-header .page-label {
+  margin-left: auto;
+  font-size: 9pt;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+/* --- Answer Item --- */
+.answer-item {
+  margin-bottom: 5mm;
+  padding: 4mm 5mm;
+  background: var(--color-success-bg);
+  border: 1px solid #c6f6d5;
+  border-left: 4px solid var(--color-success);
+  border-radius: 6px;
+}
+
+.answer-item:last-child {
+  margin-bottom: 0;
+}
+
+.answer-header {
+  display: flex;
+  align-items: center;
+  gap: 3mm;
+  margin-bottom: 3mm;
+}
+
+.answer-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 7mm;
+  height: 7mm;
+  min-width: 7mm;
+  background: var(--color-success);
+  color: white;
+  font-family: var(--font-en);
+  font-size: 10pt;
+  font-weight: 700;
+  border-radius: 50%;
+}
+
+.answer-label {
+  font-size: 10pt;
+  font-weight: 600;
+  color: var(--color-success);
+}
+
+.answer-correct {
+  font-size: 11pt;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 2mm;
+  padding: 2mm 3mm;
+  background: white;
+  border-radius: 4px;
+  border: 1px solid #c6f6d5;
+}
+
+.answer-correct .label {
+  font-size: 9pt;
+  color: var(--color-success);
+  font-weight: 600;
+  margin-right: 2mm;
+}
+
+.answer-explanation {
+  font-size: 10pt;
+  line-height: 1.8;
+  color: var(--color-text);
+}
+
+.answer-explanation .step {
+  margin-bottom: 1mm;
+}
+
+.explanation-title {
+  font-size: 9pt;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-bottom: 1mm;
+  letter-spacing: 1px;
+}
+
+/* --- Print Optimizations --- */
+@media print {
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .page {
+    page-break-after: always;
+  }
+
+  .page:last-child {
+    page-break-after: auto;
+  }
+
+  .question-item {
+    page-break-inside: avoid;
+  }
+
+  .answer-item {
+    page-break-inside: avoid;
+  }
+}

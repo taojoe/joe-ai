@@ -1,0 +1,49 @@
+{
+  "title": "平方差公式",
+  "subtitle": "Difference of Squares",
+  "knowledge": {
+    "description": "平方差公式是代数中最基本、最重要的恒等式之一。它描述了两个数的平方之差可以分解为这两个数之和与之差的乘积。",
+    "formulas": [
+      "a^2 - b^2 = (a + b)(a - b)"
+    ],
+    "keyPoints": [
+      "左边必须是两个完全平方式相减（不是相加）",
+      "右边分解为「两数之和」×「两数之差」",
+      "可以反向使用：$(a+b)(a-b) = a^2 - b^2$，用于简化计算"
+    ],
+    "examples": [
+      {
+        "expression": "x^2 - 4 = x^2 - 2^2 = (x+2)(x-2)",
+        "note": "这里 $a = x$，$b = 2$"
+      }
+    ]
+  },
+  "questions": [
+    {
+      "type": "multiple-choice",
+      "question": "因式分解 $x^2 - 9$",
+      "options": [
+        "$(x+3)(x-3)$",
+        "$(x+9)(x-9)$",
+        "$(x-3)^2$",
+        "$(x+3)^2$"
+      ],
+      "answer": "A",
+      "explanation": "$x^2 - 9 = x^2 - 3^2$\n\n这里 $a = x$，$b = 3$\n\n代入平方差公式：$(x+3)(x-3)$"
+    },
+    {
+      "type": "short-answer",
+      "question": "因式分解 $4a^2 - 25b^2$",
+      "hint": "提示：先想想 $4a^2$ 和 $25b^2$ 分别是谁的平方？",
+      "answer": "$(2a + 5b)(2a - 5b)$",
+      "explanation": "$4a^2 - 25b^2 = (2a)^2 - (5b)^2$\n\n这里 $a = 2a$，$b = 5b$\n\n代入平方差公式：$(2a+5b)(2a-5b)$"
+    },
+    {
+      "type": "short-answer",
+      "question": "利用平方差公式，巧算 $99 \\times 101$",
+      "hint": "提示：试着把 $99$ 和 $101$ 分别用 $100$ 来表示",
+      "answer": "$9999$",
+      "explanation": "$99 \\times 101 = (100 - 1)(100 + 1)$\n\n$= 100^2 - 1^2$\n\n$= 10000 - 1 = 9999$"
+    }
+  ]
+}

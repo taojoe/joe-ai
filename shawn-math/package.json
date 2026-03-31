@@ -1,0 +1,13 @@
+{
+  "name": "shawn-math",
+  "version": "1.0.0",
+  "description": "Shawn 数学学习工具集 - 一系列独立的数学学习 skills",
+  "type": "module",
+  "scripts": {
+    "quiz": "node skills/math-print-quiz/index.js"
+  },
+  "dependencies": {
+    "katex": "^0.16.9",
+    "puppeteer": "^24.0.0"
+  }
+}
