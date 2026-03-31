@@ -2,36 +2,57 @@ import katex from 'katex';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { marked } from 'marked';
+
+// Configure marked to prefer breaks or standard behavior
+marked.setOptions({ breaks: true });
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
- * Render inline LaTeX ($...$) and display LaTeX ($$...$$) in text using KaTeX SSR
+ * Render text containing Markdown and KaTeX cleanly.
+ * We extract math blocks first, process markdown, and restore math to prevent marked from mangling LaTeX.
  */
-function renderMath(text) {
+function renderMarkdownWithMath(text, inline = false) {
   if (!text) return '';
   
-  // Render display math first ($$...$$)
-  let result = text.replace(/\$\$([^$]+)\$\$/g, (_, math) => {
-    try {
-      return katex.renderToString(math.trim(), { displayMode: true, throwOnError: false });
-    } catch (e) {
-      console.warn(`KaTeX display render error: ${math}`, e.message);
-      return `<span class="katex-error">${math}</span>`;
-    }
+  const mathItems = [];
+  let index = 0;
+  
+  // Extract display math ($$...$$)
+  let processed = text.replace(/\$\$([\s\S]+?)\$\$/g, (_, math) => {
+    let rendered = '';
+    try { rendered = katex.renderToString(math.trim(), { displayMode: true, throwOnError: false }); } 
+    catch(e) { rendered = `<span class="katex-error">${math}</span>`; }
+    mathItems.push(rendered);
+    return `@@MATH_BLOCK_${index++}@@`;
   });
 
-  // Render inline math ($...$)
-  result = result.replace(/\$([^$]+)\$/g, (_, math) => {
-    try {
-      return katex.renderToString(math.trim(), { displayMode: false, throwOnError: false });
-    } catch (e) {
-      console.warn(`KaTeX inline render error: ${math}`, e.message);
-      return `<span class="katex-error">${math}</span>`;
-    }
+  // Extract inline math ($...$)
+  processed = processed.replace(/\$([^$\n]+?)\$/g, (_, math) => {
+    let rendered = '';
+    try { rendered = katex.renderToString(math.trim(), { displayMode: false, throwOnError: false }); }
+    catch(e) { rendered = `<span class="katex-error">${math}</span>`; }
+    mathItems.push(rendered);
+    return `@@MATH_BLOCK_${index++}@@`;
   });
 
-  return result;
+  // Parse Markdown (inline or block)
+  let html = inline ? marked.parseInline(processed) : marked.parse(processed);
+
+  // Restore math
+  mathItems.forEach((mathHtml, i) => {
+    html = html.replace(`@@MATH_BLOCK_${i}@@`, () => mathHtml);
+  });
+  
+  return html;
+}
+
+/**
+ * Basic wrapper alias for inline processing parity
+ */
+function renderMath(text) {
+  return renderMarkdownWithMath(text, true);
 }
 
 /**
@@ -44,18 +65,6 @@ function renderFormula(formula) {
     console.warn(`KaTeX formula render error: ${formula}`, e.message);
     return `<span class="katex-error">${formula}</span>`;
   }
-}
-
-/**
- * Render multiple explanation lines (split by \n)
- */
-function renderExplanation(explanation) {
-  if (!explanation) return '';
-  return explanation
-    .split('\n')
-    .filter(line => line.trim())
-    .map(line => `<div class="step">${renderMath(line)}</div>`)
-    .join('');
 }
 
 /**
@@ -139,7 +148,7 @@ function renderAnswerItem(question, index) {
       ${question.explanation ? `
         <div class="answer-explanation">
           <div class="explanation-title">📝 解题过程</div>
-          ${renderExplanation(question.explanation)}
+          <div class="explanation-content">${renderMarkdownWithMath(question.explanation, false)}</div>
         </div>
       ` : ''}
     </div>
@@ -181,7 +190,7 @@ export function generateHTML(data) {
     <!-- Knowledge Section -->
     <div class="knowledge-section">
       <div class="section-label">📖 知识要点</div>
-      <div class="description">${renderMath(data.knowledge.description)}</div>
+      <div class="description">${renderMarkdownWithMath(data.knowledge.description, false)}</div>
       
       ${data.knowledge.formulas.map(f => `
         <div class="formula-box">${renderFormula(f)}</div>
@@ -210,7 +219,7 @@ export function generateHTML(data) {
     </div>
   </div>
 
-  <!-- ========== Page 2: Practice Problems ========== -->
+  <!-- ========== Page 2: Practice Problems (Part 1) ========== -->
   <div class="page">
     <div class="page-header">
       <span class="title">${data.title}</span>
@@ -218,26 +227,46 @@ export function generateHTML(data) {
       <span class="page-label">第 2 页 / 练习题</span>
     </div>
 
-    <!-- Questions Section -->
+    <!-- Questions Section P1 -->
     <div class="questions-section">
       <div class="section-divider">
-        <span class="label">✏️ 练习题</span>
+        <span class="label">✏️ 练习题 (1)</span>
       </div>
-      ${data.questions.map((q, i) => renderQuestion(q, i)).join('')}
+      ${data.questions.slice(0, Math.ceil(data.questions.length / 2)).map((q, i) => renderQuestion(q, i)).join('')}
     </div>
-
+    
     <div class="page-footer">
       <span class="brand">Shawn Math</span>
       <span class="date">${today}</span>
     </div>
   </div>
 
-  <!-- ========== Page 3: Answers & Explanations ========== -->
+  <!-- ========== Page 3: Practice Problems (Part 2) ========== -->
+  <div class="page">
+    <div class="page-header">
+      <span class="title">${data.title}</span>
+      ${data.subtitle ? `<span class="subtitle">${data.subtitle}</span>` : ''}
+      <span class="page-label">第 3 页 / 练习题</span>
+    </div>
+
+    <!-- Questions Section P2 -->
+    <div class="questions-section">
+      <!-- Continue Index -->
+      ${data.questions.slice(Math.ceil(data.questions.length / 2)).map((q, i) => renderQuestion(q, i + Math.ceil(data.questions.length / 2))).join('')}
+    </div>
+    
+    <div class="page-footer">
+      <span class="brand">Shawn Math</span>
+      <span class="date">${today}</span>
+    </div>
+  </div>
+
+  <!-- ========== Page 4: Answers & Explanations ========== -->
   <div class="page">
     <div class="answer-page-header">
       <span class="title">✅ 答案与解析</span>
       <span class="subtitle">${data.title}</span>
-      <span class="page-label">第 3 页 / 答案页</span>
+      <span class="page-label">第 4 页 / 答案页</span>
     </div>
 
     ${data.questions.map((q, i) => renderAnswerItem(q, i)).join('')}
