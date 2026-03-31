@@ -165,6 +165,7 @@ async function main() {
   } finally {
     await browser.close();
   }
+  process.exit(0);
 }
 
 main().catch(err => {
