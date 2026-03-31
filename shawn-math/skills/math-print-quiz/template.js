@@ -9,6 +9,9 @@ marked.setOptions({ breaks: true });
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// Global counter for unique plot element IDs across all renderMarkdownWithMath calls
+let globalPlotIndex = 0;
+
 /**
  * Render text containing Markdown and KaTeX cleanly.
  * We extract math blocks first, process markdown, and restore math to prevent marked from mangling LaTeX.
@@ -19,8 +22,25 @@ function renderMarkdownWithMath(text, inline = false) {
   const mathItems = [];
   let index = 0;
   
+  // Extract plot blocks (```plot ... ```)
+  let processed = text.replace(/```plot\n([\s\S]+?)```/g, (_, content) => {
+    const config = {};
+    content.trim().split('\n').forEach(line => {
+      const parts = line.split(':');
+      if (parts.length >= 2) {
+        const key = parts.shift().trim();
+        config[key] = parts.join(':').trim();
+      }
+    });
+    const escapedConfig = encodeURIComponent(JSON.stringify(config));
+    const plotId = globalPlotIndex++;
+    const html = `<div id="plot_${plotId}" class="math-graph-container" data-config="${escapedConfig}" style="display:flex; justify-content:center; margin: 15px 0;"></div>`;
+    mathItems.push(html);
+    return `@@MATH_BLOCK_${index++}@@`;
+  });
+
   // Extract display math ($$...$$)
-  let processed = text.replace(/\$\$([\s\S]+?)\$\$/g, (_, math) => {
+  processed = processed.replace(/\$\$([\s\S]+?)\$\$/g, (_, math) => {
     let rendered = '';
     try { rendered = katex.renderToString(math.trim(), { displayMode: true, throwOnError: false }); } 
     catch(e) { rendered = `<span class="katex-error">${math}</span>`; }
@@ -177,6 +197,8 @@ export function generateHTML(data) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${data.title} - Shawn Math</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://unpkg.com/d3@3/d3.min.js"></script>
+  <script src="https://unpkg.com/function-plot@1/dist/function-plot.js"></script>
   <style>${cssContent}</style>
 </head>
 <body>
@@ -278,6 +300,42 @@ export function generateHTML(data) {
       <span class="date">${today}</span>
     </div>
   </div>
+
+  <!-- ========== Math Graph Render Script ========== -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      document.querySelectorAll('.math-graph-container').forEach(function(container) {
+        try {
+          var configRaw = container.getAttribute('data-config');
+          if (!configRaw) return;
+          var config = JSON.parse(decodeURIComponent(configRaw));
+          
+          var fnConfig = { fn: config.fn };
+          if (config.color) fnConfig.color = config.color;
+          
+          var plotOptions = {
+            target: '#' + container.id,
+            width: parseInt(config.width) || 450,
+            height: parseInt(config.height) || 280,
+            grid: true,
+            data: [fnConfig]
+          };
+          
+          if (config.domain) {
+            plotOptions.xAxis = { domain: JSON.parse(config.domain) };
+          }
+          if (config.yDomain) {
+            plotOptions.yAxis = { domain: JSON.parse(config.yDomain) };
+          }
+          
+          functionPlot(plotOptions);
+        } catch (err) {
+          console.error("Plot error:", err);
+          container.innerHTML = "<span class='katex-error'>[图像渲染失败: " + err.message + "]</span>";
+        }
+      });
+    });
+  </script>
 
 </body>
 </html>`;

@@ -143,6 +143,11 @@ async function main() {
       console.warn('⚠️  未检测到 KaTeX 渲染元素，可能没有数学公式');
     });
 
+    // Wait for math graphs to render if there are any
+    await page.evaluate(() => {
+      return new Promise(resolve => setTimeout(resolve, 500));
+    });
+
     // Generate PDF
     const pdfPath = path.resolve(OUTPUT_DIR, `${quizName}.pdf`);
     await page.pdf({
