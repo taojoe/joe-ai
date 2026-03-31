@@ -170,12 +170,12 @@ export function generateHTML(data) {
 </head>
 <body>
 
-  <!-- ========== Page 1: Knowledge + Questions ========== -->
+  <!-- ========== Page 1: Knowledge ========== -->
   <div class="page">
     <div class="page-header">
       <span class="title">${data.title}</span>
       ${data.subtitle ? `<span class="subtitle">${data.subtitle}</span>` : ''}
-      <span class="page-label">知识 & 练习</span>
+      <span class="page-label">第 1 页 / 知识讲解</span>
     </div>
 
     <!-- Knowledge Section -->
@@ -204,6 +204,20 @@ export function generateHTML(data) {
       ` : ''}
     </div>
 
+    <div class="page-footer">
+      <span class="brand">Shawn Math</span>
+      <span class="date">${today}</span>
+    </div>
+  </div>
+
+  <!-- ========== Page 2: Practice Problems ========== -->
+  <div class="page">
+    <div class="page-header">
+      <span class="title">${data.title}</span>
+      ${data.subtitle ? `<span class="subtitle">${data.subtitle}</span>` : ''}
+      <span class="page-label">第 2 页 / 练习题</span>
+    </div>
+
     <!-- Questions Section -->
     <div class="questions-section">
       <div class="section-divider">
@@ -218,12 +232,12 @@ export function generateHTML(data) {
     </div>
   </div>
 
-  <!-- ========== Page 2: Answers & Explanations ========== -->
+  <!-- ========== Page 3: Answers & Explanations ========== -->
   <div class="page">
     <div class="answer-page-header">
       <span class="title">✅ 答案与解析</span>
       <span class="subtitle">${data.title}</span>
-      <span class="page-label">答案页</span>
+      <span class="page-label">第 3 页 / 答案页</span>
     </div>
 
     ${data.questions.map((q, i) => renderAnswerItem(q, i)).join('')}
