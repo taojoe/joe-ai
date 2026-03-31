@@ -1,0 +1,66 @@
+{
+  "name": "hacker-news",
+  "displayName": "Hacker News (Strategic Monitor)",
+  "source": {
+    "type": "rss",
+    "feeds": [
+      "https://hnrss.org/newest?points=10",
+      "https://hnrss.org/show"
+    ],
+    "platform": "hnrss"
+  },
+  "filtering": {
+    "trustedDomains": [
+      "openai.com",
+      "anthropic.com",
+      "huggingface.co",
+      "mistral.ai",
+      "arxiv.org",
+      "github.com",
+      "deepmind.com",
+      "perplexity.ai",
+      "cohere.com",
+      "deepseek.com",
+      "x.ai",
+      "groq.com",
+      "suno.com",
+      "midjourney.com",
+      "ollama.com",
+      "together.ai"
+    ],
+    "keywords": [
+      "LLM",
+      "Agent",
+      "GPT",
+      "Transformer",
+      "RAG",
+      "Vector DB",
+      "Embeddings",
+      "Claude",
+      "Gemini",
+      "Llama",
+      "Generative AI",
+      "Stable Diffusion",
+      "OpenAI",
+      "Anthropic",
+      "DeepSeek",
+      "Grok",
+      "MoE",
+      "BitNet",
+      "Suno",
+      "Midjourney",
+      "Groq",
+      "Ollama",
+      "vLLM",
+      "TGI",
+      "LoRA",
+      "Fine-tuning",
+      "QLoRA"
+    ],
+    "minPoints": 5
+  },
+  "output": {
+    "dir": "../../output/hacker-news",
+    "format": "markdown"
+  }
+}
