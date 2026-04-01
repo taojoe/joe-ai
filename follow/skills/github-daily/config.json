@@ -1,0 +1,26 @@
+{
+  "name": "github-daily",
+  "displayName": "GitHub Daily AI Trending",
+  "source": {
+    "type": "github-api",
+    "params": {
+      "topics": ["ai-agents", "llm", "rag", "product"],
+      "minStars": 100,
+      "timeWindow": "24h"
+    }
+  },
+  "content": {
+    "extractReadme": true,
+    "maxHighlights": 3,
+    "keywords": {
+      "Agents": ["agent", "autonomous", "tool-use"],
+      "LLM": ["llm", "large-language-model", "llama", "deepseek"],
+      "RAG": ["rag", "vector-db", "retrieval", "embedding"],
+      "Product": ["ui", "desktop", "application", "platform"]
+    }
+  },
+  "output": {
+    "dir": "../../output/github-daily",
+    "format": "markdown"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "name": "reddit",
+  "displayName": "Reddit AI Monitor",
+  "feeds": [
+    {
+      "subreddit": "MachineLearning",
+      "url": "https://www.reddit.com/r/MachineLearning/top/.rss?t=day",
+      "category": "Academic & Research"
+    },
+    {
+      "subreddit": "LocalLLM",
+      "url": "https://www.reddit.com/r/LocalLLM/hot/.rss",
+      "category": "Local Models & Hardware"
+    },
+    {
+      "subreddit": "AI_Agents",
+      "url": "https://www.reddit.com/r/AI_Agents/hot/.rss",
+      "category": "Agentic Workflows"
+    },
+    {
+      "subreddit": "ChatGPTPro",
+      "url": "https://www.reddit.com/r/ChatGPTPro/hot/.rss",
+      "category": "Productivity & Business"
+    },
+    {
+      "subreddit": "StableDiffusion",
+      "url": "https://www.reddit.com/r/StableDiffusion/hot/.rss",
+      "category": "Generative Art & Vision"
+    }
+  ],
+  "filtering": {
+    "minUpvotes": 50,
+    "excludeKeywords": [
+      "promotional",
+      "politics",
+      "spam"
+    ]
+  },
+  "output": {
+    "dir": "../../output/reddit",
+    "format": "markdown"
+  }
+}
