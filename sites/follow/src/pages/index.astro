@@ -1,0 +1,57 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navbar from '../components/Navbar.astro';
+import ProductCard from '../components/ProductCard.astro';
+import { drizzle } from 'drizzle-orm/d1';
+import { getProductsByDate, getLatestDate, getAvailableDates } from '../lib/db';
+import { env } from 'cloudflare:workers';
+
+const db = drizzle(env.FOLLOW_DB);
+
+const latestDate = await getLatestDate(db);
+const availableDates = await getAvailableDates(db);
+
+if (!latestDate) {
+  return Astro.redirect('/archive/2026-03-31');
+}
+
+const products = await getProductsByDate(db, latestDate);
+
+const imageBaseUrl = `/api/images/producthunt/${latestDate}`;
+
+function formatDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', year: 'numeric' });
+}
+---
+
+<BaseLayout title="Product Hunt 每日精选">
+  <Navbar currentDate={latestDate} latestDate={latestDate} availableDates={availableDates} />
+
+  <main class="container mx-auto px-4 py-8">
+    <header class="text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-ph-orange to-amber-500 bg-clip-text text-transparent">
+        🚀 Product Hunt 每日精选
+      </h1>
+      <p class="text-xl text-gray-400">
+        {formatDate(latestDate)} · {products.length} 款产品
+      </p>
+    </header>
+
+    {products.length > 0 ? (
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {products.map((product, index) => (
+          <ProductCard product={product} imageBaseUrl={imageBaseUrl} index={index} />
+        ))}
+      </div>
+    ) : (
+      <div class="text-center py-20">
+        <p class="text-gray-400 text-lg">暂无数据</p>
+      </div>
+    )}
+  </main>
+
+  <footer class="mt-20 py-8 border-t border-base-300 text-center text-gray-500 text-sm">
+    <p>Powered by Product Hunt API · Built with Astro + Cloudflare</p>
+  </footer>
+</BaseLayout>
