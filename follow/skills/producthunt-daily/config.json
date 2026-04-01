@@ -1,0 +1,18 @@
+{
+  "name": "producthunt-daily",
+  "displayName": "Product Hunt Daily Top 20",
+  "source": {
+    "type": "api/graphql",
+    "endpoint": "https://api.producthunt.com/v2/api/graphql"
+  },
+  "filtering": {
+    "maxItems": 20,
+    "featured": true,
+    "order": "VOTES"
+  },
+  "output": {
+    "dir": "../../output/producthunt-daily",
+    "format": "markdown",
+    "filenamePattern": "{date}-{slug}.md"
+  }
+}
