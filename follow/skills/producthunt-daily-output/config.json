@@ -1,0 +1,11 @@
+{
+  "name": "producthunt-daily-output",
+  "displayName": "Product Hunt Daily Digest (Chinese)",
+  "description": "AI-driven translation and aggregation of Product Hunt reports",
+  "input": {
+    "dir": "../../output/producthunt-daily"
+  },
+  "output": {
+    "dir": "../../output/producthunt-daily-output"
+  }
+}

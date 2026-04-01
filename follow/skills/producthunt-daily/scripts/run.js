@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { readFileSync, existsSync } from 'node:fs';
 import { fetchDailyPosts } from './fetch-posts.js';
 import { parsePost } from './parse-post.js';
-import { ensureDir, writeArticle, getExistingFiles } from '../utils/file-manager.js';
+import { ensureDir, writeArticle, getExistingDirs, downloadImage } from '../utils/file-manager.js';
 import { logger } from '../utils/logger.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -35,13 +35,14 @@ async function main() {
   const dateStr = getDateString(); // 默认昨日
   logger.info(`Target Date: ${dateStr} (Yesterday)`);
 
-  // 2. 确定目录
-  const outputDir = join(__dirname, '..', config.output.dir);
-  ensureDir(outputDir);
+  // 2. 确定根目录
+  const outputRoot = join(__dirname, '..', config.output.dir);
+  const dayDir = join(outputRoot, dateStr);
+  ensureDir(dayDir);
 
-  // 3. 获取已有文件（用于去重）
-  const existingFiles = getExistingFiles(outputDir);
-  logger.info(`Database: ${existingFiles.length} archived items`);
+  // 3. 获取已有目录（用于去重）
+  const existingDirs = getExistingDirs(dayDir);
+  logger.info(`Directory: ${existingDirs.length} existing products for this date`);
 
   // 4. 开始抓取
   try {
@@ -52,33 +53,51 @@ async function main() {
     let saved = 0;
     let skipped = 0;
 
-    // 5. 解析并保存
-    for (const post of rawPosts) {
-      try {
-        const { slug, markdown, meta } = parsePost(post, dateStr);
-        const fileName = `${dateStr}-${slug}.md`;
-        const filePath = join(outputDir, fileName);
+    // 5. 解析并保存 (按排名遍历)
+    for (let i = 0; i < rawPosts.length; i++) {
+        const post = rawPosts[i];
+        const rank = (i + 1).toString().padStart(2, '0');
+        
+        try {
+            const { slug, markdown, imageTasks, meta } = parsePost(post, dateStr);
+            const productDirName = `${rank}-${slug}`;
+            const productDir = join(dayDir, productDirName);
+            const imageDir = join(productDir, 'images');
 
-        // 去重
-        if (existingFiles.includes(fileName)) {
-          skipped++;
-          continue;
-        }
+            // 去重判断
+            if (existingDirs.includes(productDirName)) {
+                skipped++;
+                continue;
+            }
 
-        // 保存
-        const written = writeArticle(filePath, markdown);
-        if (written) {
-          saved++;
-          logger.info(`[DAILY NEW] → ${meta.title} (${meta.votes} votes)`);
+            // 创建产品目录和图片目录
+            ensureDir(productDir);
+            if (imageTasks.length > 0) {
+                ensureDir(imageDir);
+            }
+
+            // 下载图片
+            for (const task of imageTasks) {
+                const destPath = join(imageDir, task.localName);
+                await downloadImage(task.url, destPath);
+            }
+
+            // 保存 index.md
+            const indexFilePath = join(productDir, 'index.md');
+            const written = writeArticle(indexFilePath, markdown);
+            
+            if (written) {
+                saved++;
+                logger.info(`[DAILY NEW] #${rank} → ${meta.title} (${meta.votes} votes)`);
+            }
+        } catch (err) {
+            logger.error(`Error processing post ${post.name}: ${err.message}`);
         }
-      } catch (err) {
-        logger.error(`Error processing post ${post.name}: ${err.message}`);
-      }
     }
 
     // 6. 汇总
     logger.divider();
-    logger.success(`Summary for ${dateStr}: Saved ${saved} new, Skipped ${skipped} duplicates.`);
+    logger.success(`Summary for ${dateStr}: Saved ${saved} new products, Skipped ${skipped} duplicates.`);
     logger.divider();
     logger.success(`Product Hunt Daily Sync Complete! ✨`);
 

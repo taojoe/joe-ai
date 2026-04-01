@@ -35,11 +35,35 @@ export function writeArticle(filePath, content, options = {}) {
 }
 
 /**
- * 获取输出目录中已有的文件列表
- * @param {string} outputDir - 输出目录
- * @returns {string[]} 文件名列表
+ * 下载并保存图片
+ * @param {string} url - 图片 URL
+ * @param {string} destPath - 目标保存路径
+ * @returns {Promise<boolean>} 是否成功
  */
-export function getExistingFiles(outputDir) {
+export async function downloadImage(url, destPath) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    
+    writeFileSync(destPath, buffer);
+    return true;
+  } catch (error) {
+    logger.error(`Download failed: ${url} -> ${error.message}`);
+    return false;
+  }
+}
+
+/**
+ * 获取输出目录中已有的子目录列表
+ * @param {string} outputDir - 输出目录
+ * @returns {string[]} 目录名列表
+ */
+export function getExistingDirs(outputDir) {
   if (!existsSync(outputDir)) return [];
-  return readdirSync(outputDir).filter((f) => f.endsWith('.md'));
+  return readdirSync(outputDir, { withFileTypes: true })
+    .filter(dirent => dirent.isDirectory())
+    .map(dirent => dirent.name);
 }
