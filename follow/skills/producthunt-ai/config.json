@@ -1,0 +1,16 @@
+{
+  "name": "producthunt-ai",
+  "displayName": "Product Hunt - Artificial Intelligence",
+  "source": {
+    "type": "rss",
+    "url": "https://www.producthunt.com/feed?category=artificial-intelligence"
+  },
+  "filtering": {
+    "keywords": ["AI", "LLM", "Agent", "GPT", "Chat", "Agentic", "NLP", "Machine Learning"]
+  },
+  "output": {
+    "dir": "../../output/producthunt-ai",
+    "format": "markdown",
+    "filenamePattern": "{date}-{slug}.md"
+  }
+}
