@@ -22,13 +22,17 @@
 4. **保存文件**：在同一目录下保存为 `zh.md`。
 
 ### 第二阶段：汇总合并 (Consolidation -> Daily Digest)
-1. **创建汇总目录**：在 `output/producthunt-daily-output/[date]/` 创建目录。
-2. **合并内容**：
-   - 读取该日期下所有产品的 `zh.md`。
+1. **创建汇总目录**：在 `output/producthunt-daily-output/[date]/` 创建目录，并在其中创建 `images/` 子文件夹。
+2. **资源提取与本地化**：
+   - 对每一个产品的 `zh.md` 执行合并前处理：
+     - **按需提取图片**：解析 `zh.md` 的内容，确定其引用的图片文件名（例如 `images/media-0.png`）。
+     - **按需复制并重命名**：**仅**将这些实际被引用的图片文件从原单品目录复制到 `output/producthunt-daily-output/[date]/images/`。为了防止重名，**必须**重命名为 `[rank-slug]-[filename]`（例如 `01-jupid-media-0.png`）。
+     - **更新链接**：将合并到每日汇总中的 Markdown 图片链接更新为引用新的本地副本路径。
+3. **内容合并**：
    - 按排名排序（依据文件夹前缀，如 `01-`, `02-`）。
-   - 将内容合并，每个产品之间使用 `---` 分隔。
+   - 将处理后的产品描述内容依次合并，每个产品之间使用 `---` 分隔。
    - 顶部增加当天的汇总标题（例如：`Product Hunt 每日精选 - 2026-03-31`）。
-3. **输出结果**：保存为 `output/producthunt-daily-output/[date]/index.md`。
+4. **输出结果**：保存为 `output/producthunt-daily-output/[date]/index.md`。
 
 ## 视觉与审美规范
 - 翻译应自然、具有科技感，避免生硬的机器翻译感。
