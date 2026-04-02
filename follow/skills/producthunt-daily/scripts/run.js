@@ -63,12 +63,17 @@ async function main() {
             const productDirName = `${rank}-${slug}`;
             const productDir = join(dayDir, productDirName);
             const imageDir = join(productDir, 'images');
+            const indexFilePath = join(productDir, 'index.md');
 
-            // 去重判断
-            if (existingDirs.includes(productDirName)) {
+            // 去重判断：只有当目录存在且 index.md 文件也存在时，才视为已处理
+            if (existsSync(indexFilePath)) {
                 skipped++;
+                logger.skip(`[EXISTS] #${rank} ${meta.title}`);
                 continue;
             }
+
+            logger.divider();
+            logger.info(`[PROCESSING] #${rank} ${meta.title}`);
 
             // 创建产品目录和图片目录
             ensureDir(productDir);
@@ -77,13 +82,15 @@ async function main() {
             }
 
             // 下载图片
-            for (const task of imageTasks) {
-                const destPath = join(imageDir, task.localName);
-                await downloadImage(task.url, destPath);
+            if (imageTasks.length > 0) {
+                logger.info(`Downloading ${imageTasks.length} images...`);
+                for (const task of imageTasks) {
+                    const destPath = join(imageDir, task.localName);
+                    await downloadImage(task.url, destPath);
+                }
             }
 
             // 保存 index.md
-            const indexFilePath = join(productDir, 'index.md');
             const written = writeArticle(indexFilePath, markdown);
             
             if (written) {

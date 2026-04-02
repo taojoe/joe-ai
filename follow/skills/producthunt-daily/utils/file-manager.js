@@ -50,6 +50,8 @@ export async function downloadImage(url, destPath) {
     const buffer = Buffer.from(arrayBuffer);
     
     writeFileSync(destPath, buffer);
+    const fileName = destPath.split('/').pop();
+    logger.success(`Downloaded: ${fileName}`);
     return true;
   } catch (error) {
     logger.error(`Download failed: ${url} -> ${error.message}`);
