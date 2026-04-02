@@ -3,9 +3,31 @@ import { join } from 'path';
 import { execSync } from 'child_process';
 import { getPlatformProxy } from 'wrangler';
 
+interface Product {
+  id: string;
+  title: string;
+  taglineZh: string | null;
+  votes: number;
+  url: string | null;
+  website: string | null;
+  date: string;
+  topicsZh: string;
+  isAi: boolean;
+  thumbnail: string | null;
+  descriptionHtml: string | null;
+  slug: string;
+}
+
 interface ImageMetadata {
   localPath: string;
   r2Key: string;
+}
+
+interface UploadData {
+  date: string;
+  productCount: number;
+  products: Product[];
+  images: ImageMetadata[];
 }
 
 // --- CONFIG ---
@@ -22,19 +44,42 @@ if (!DATE_ARG || (!IS_LOCAL && !IS_REMOTE)) {
 
 const DATE = DATE_ARG.split('=')[1];
 const R2_BUCKET_NAME = 'follow-assets';
-const SQL_PATH = join(process.cwd(), `upload-${DATE}.sql`);
-const IMAGES_JSON_PATH = join(process.cwd(), `images-${DATE}.json`);
+const DATA_JSON_PATH = join(process.cwd(), 'data', DATE, 'data.json');
+
+// --- UTILS ---
+
+function escapeSql(str: string | null): string {
+  if (str === null) return 'NULL';
+  return `'${str.replace(/'/g, "''")}'`;
+}
+
+function generateSql(date: string, products: Product[]): string {
+  const values = products.map((p, index) => {
+    const rank = index + 1;
+    return `(${escapeSql(p.id)}, ${escapeSql(date)}, ${rank}, ${escapeSql(p.slug)}, ${escapeSql(p.title)}, ${escapeSql(p.taglineZh)}, ${p.votes}, ${escapeSql(p.url)}, ${escapeSql(p.website)}, ${escapeSql(p.topicsZh)}, ${p.isAi ? 1 : 0}, ${escapeSql(p.thumbnail)}, ${escapeSql(p.descriptionHtml)})`;
+  }).join(',\n');
+
+  return `
+INSERT OR REPLACE INTO ph_products (id, date, rank, slug, title, tagline_zh, votes, url, website, topics_zh, is_ai, thumbnail, description_html)
+VALUES
+${values};
+
+INSERT OR REPLACE INTO ph_dates (date, source, product_count, created_at)
+VALUES (${escapeSql(date)}, 'producthunt', ${products.length}, CURRENT_TIMESTAMP);
+  `.trim();
+}
 
 // --- HANDLERS ---
 
-async function handleLocalUpload(images: ImageMetadata[]) {
+async function handleLocalUpload(data: UploadData) {
   console.log('\n🔗 Connection: Local Development Proxy');
   const { env } = await getPlatformProxy();
+  const db = env.FOLLOW_DB as any;
   const assets = env.FOLLOW_ASSETS as any;
 
-  if (!SKIP_IMAGES && images.length > 0) {
-    console.log(`📸 Uploading ${images.length} images to local R2...`);
-    for (const img of images) {
+  if (!SKIP_IMAGES && data.images.length > 0) {
+    console.log(`📸 Uploading ${data.images.length} images to local R2...`);
+    for (const img of data.images) {
       const content = await readFile(img.localPath);
       await assets.put(img.r2Key, content);
       process.stdout.write('.');
@@ -42,22 +87,31 @@ async function handleLocalUpload(images: ImageMetadata[]) {
     console.log('\n   ✓ R2 Success');
   }
 
-  console.log('💾 Executing SQL on local D1...');
-  try {
-    const cmd = `wrangler d1 execute follow-db --local --file="${SQL_PATH}"`;
-    execSync(cmd, { stdio: 'inherit' });
-    console.log('   ✓ D1 Success');
-  } catch (e) {
-    console.error('\n❌ D1 Execution failed locally.');
+  console.log('💾 Inserting data to local D1...');
+  for (let i = 0; i < data.products.length; i++) {
+    const p = data.products[i];
+    const rank = i + 1;
+    await db.prepare(`
+      INSERT OR REPLACE INTO ph_products (id, date, rank, slug, title, tagline_zh, votes, url, website, topics_zh, is_ai, thumbnail, description_html)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(p.id, DATE, rank, p.slug, p.title, p.taglineZh, p.votes, p.url, p.website, p.topicsZh, p.isAi ? 1 : 0, p.thumbnail, p.descriptionHtml).run();
+    process.stdout.write('.');
   }
+  
+  await db.prepare(`
+    INSERT OR REPLACE INTO ph_dates (date, source, product_count, created_at)
+    VALUES (?, 'producthunt', ?, CURRENT_TIMESTAMP)
+  `).bind(DATE, data.products.length).run();
+
+  console.log('\n   ✓ D1 Success');
 }
 
-async function handleRemoteUpload(images: ImageMetadata[]) {
+async function handleRemoteUpload(data: UploadData) {
   console.log('\n🌍 Connection: Remote Cloudflare');
 
-  if (!SKIP_IMAGES && images.length > 0) {
-    console.log(`📸 Uploading ${images.length} images to remote R2...`);
-    for (const img of images) {
+  if (!SKIP_IMAGES && data.images.length > 0) {
+    console.log(`📸 Uploading ${data.images.length} images to remote R2...`);
+    for (const img of data.images) {
       const cmd = `wrangler r2 object put "${R2_BUCKET_NAME}/${img.r2Key}" --file="${img.localPath}"`;
       execSync(cmd, { stdio: 'ignore' });
       process.stdout.write('.');
@@ -65,9 +119,13 @@ async function handleRemoteUpload(images: ImageMetadata[]) {
     console.log('\n   ✓ R2 Success');
   }
 
-  console.log('💾 Executing SQL on remote D1...');
+  console.log('💾 Generating and executing SQL on remote D1...');
+  const sql = generateSql(DATE, data.products);
+  const sqlPath = join(process.cwd(), `temp-upload-${DATE}.sql`);
+  await import('fs/promises').then(fs => fs.writeFile(sqlPath, sql));
+
   try {
-    const cmd = `wrangler d1 execute follow-db --remote --file="${SQL_PATH}"`;
+    const cmd = `wrangler d1 execute follow-db --remote --file="${sqlPath}"`;
     execSync(cmd, { stdio: 'inherit' });
     console.log('   ✓ D1 Success');
   } catch (e) {
@@ -84,34 +142,24 @@ async function main() {
   console.log(`   Mode: ${IS_LOCAL ? 'LOCAL' : 'REMOTE'}`);
   console.log('─'.repeat(50));
 
-  // 1. Check for prepared files
+  // 1. Read JSON data
+  let data: UploadData;
   try {
-    await readFile(SQL_PATH);
+    const rawData = await readFile(DATA_JSON_PATH, 'utf-8');
+    data = JSON.parse(rawData);
   } catch (e) {
-    console.error(`❌ SQL file not found: ${SQL_PATH}\n   Please run scripts/prepare.ts first.`);
+    console.error(`❌ Data file not found: ${DATA_JSON_PATH}\n   Please run scripts/prepare.ts first.`);
     process.exit(1);
-  }
-
-  let images: ImageMetadata[] = [];
-  try {
-    const imagesData = await readFile(IMAGES_JSON_PATH, 'utf-8');
-    images = JSON.parse(imagesData);
-  } catch (e) {
-    if (!SKIP_IMAGES) {
-      console.warn(`⚠️  Image manifest not found: ${IMAGES_JSON_PATH}`);
-    }
   }
 
   // 2. Perform Upload
   if (IS_LOCAL) {
-    await handleLocalUpload(images);
+    await handleLocalUpload(data);
   } else {
-    await handleRemoteUpload(images);
+    await handleRemoteUpload(data);
   }
 
   console.log('\n✨ Upload process finished!\n');
 }
 
 main().catch(console.error);
-
-
