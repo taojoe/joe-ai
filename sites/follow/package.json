@@ -8,18 +8,21 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview",
+    "preview": "astro build && astro preview",
     "astro": "astro",
     "upload": "tsx scripts/upload.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "wrangler d1 migrations apply follow-db --local",
-    "db:migrate:remote": "wrangler d1 migrations apply follow-db --remote"
+    "db:migrate:remote": "wrangler d1 migrations apply follow-db --remote",
+    "generate-types": "wrangler types",
+    "deploy": "astro build && wrangler deploy",
+    "cf-typegen": "wrangler types"
   },
   "dependencies": {
-    "astro": "^6.1.2"
+    "astro": "^6.1.3"
   },
   "devDependencies": {
-    "@astrojs/cloudflare": "^13.1.6",
+    "@astrojs/cloudflare": "^13.1.7",
     "@tailwindcss/vite": "^4.0.0",
     "@types/marked": "^6.0.0",
     "@types/node": "^25.5.0",
@@ -31,5 +34,8 @@
     "tailwindcss": "^4.0.0",
     "tsx": "^4.21.0",
     "wrangler": "^4.79.0"
+  },
+  "overrides": {
+    "vite": "^7"
   }
 }
