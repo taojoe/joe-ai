@@ -6,11 +6,13 @@
 
 ## 操作流程 (AI Agent Instructions)
 
-### 第一阶段：单品翻译 (Translate -> zh.md)
+### 单品原子化闭环循环 (Strict Atomic Loop for Each Product)
 
-对 `output/producthunt-daily/[date]/` 下的每一个子目录（例如 `01-name`）执行以下操作：
+对 `output/producthunt-daily/[date]/` 下的所有产品目录执行**串行/逐个完成**的原子化任务。必须在完成一个产品的全部步骤后，再开始下一个产品的读取工作。
 
-1. **读取内容**：读取 `index.md`。
+**每个产品目录执行以下 4 个步骤：**
+
+1. **读取内容 (Foreground Read)**：读取该目录下的 `index.md`（严禁批量/提前读取或通过 list_dir 一次性查看多个文件的详细内容）。
 2. **提取媒体**：
    - 封面图：优先使用 `images/media-0.png` 或 `images/media-0.jpeg`，若不存在则使用 `images/thumb.png`。
 3. **内容翻译与重组**：参考模板 [examples/sample_zh.md](examples/sample_zh.md) 格式生成 `zh.md`：

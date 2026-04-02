@@ -24,61 +24,104 @@ interface ImageMetadata {
 }
 
 async function parseProduct(productDir: string): Promise<{ product: Product, referencedImages: string[] }> {
-  const indexPath = join(productDir, 'index.md');
   const zhPath = join(productDir, 'zh.md');
+  const indexPath = join(productDir, 'index.md');
 
-  const indexContent = await readFile(indexPath, 'utf-8');
-  const zhContent = await readFile(zhPath, 'utf-8');
+  // Load zh.md
+  let zhFrontmatter: any = {};
+  let zhMarkdown = '';
+  try {
+    const zhContent = await readFile(zhPath, 'utf-8');
+    const parsed = matter(zhContent);
+    zhFrontmatter = parsed.data;
+    zhMarkdown = parsed.content;
+  } catch (e) {
+    // console.warn(`      ⚠️ zh.md not found in ${basename(productDir)}`);
+  }
 
-  const { data: frontmatter } = matter(indexContent);
+  // Load index.md as base/fallback
+  let indexFrontmatter: any = {};
+  let indexMarkdown = '';
+  try {
+    const indexContent = await readFile(indexPath, 'utf-8');
+    const parsed = matter(indexContent);
+    indexFrontmatter = parsed.data;
+    indexMarkdown = parsed.content;
+  } catch (e) {
+    if (!zhMarkdown) {
+      throw new Error(`Both zh.md and index.md are missing in ${productDir}`);
+    }
+  }
 
-  const taglineMatch = zhContent.match(/^> (.+)$/m);
-  const taglineZh = taglineMatch ? taglineMatch[1] : frontmatter.tagline;
+  // Merge metadata (zh overrides index)
+  const meta = { ...indexFrontmatter, ...zhFrontmatter };
 
-  const descriptionMatch = zhContent.match(/## 产品简介\n([\s\S]+?)(?:## |$)/);
-  const descriptionText = descriptionMatch ? descriptionMatch[1].trim() : '';
-  const descriptionHtml = await marked.parse(descriptionText);
+  // Tagline: prefer zh frontmatter, then zh content ">" line, then index equivalents
+  let taglineZh = zhFrontmatter.tagline || (zhMarkdown.match(/^> (.+)$/m)?.[1]);
+  if (!taglineZh) {
+    taglineZh = indexFrontmatter.tagline || (indexMarkdown.match(/^> (.+)$/m)?.[1]) || '';
+  }
 
-  const topics = frontmatter.topics || [];
+  // Description: prefer zh "## 产品简介", then index "## Description"
+  let descriptionHtml = '';
+  const zhDescMatch = zhMarkdown.match(/## 产品简介\n([\s\S]+?)(?:## |$)/);
+  if (zhDescMatch) {
+    descriptionHtml = await marked.parse(zhDescMatch[1].trim());
+  } else {
+    const indexDescMatch = indexMarkdown.match(/## Description\n([\s\S]+?)(?:## |$)/);
+    if (indexDescMatch) {
+      descriptionHtml = await marked.parse(indexDescMatch[1].trim());
+    }
+  }
+
+  // Topics: prefer zh frontmatter, then index frontmatter
+  const topics = zhFrontmatter.topics || indexFrontmatter.topics || [];
   const topicsZh = JSON.stringify(topics);
 
   const imagesDir = join(productDir, 'images');
   const imageFiles = await readdir(imagesDir).catch(() => []);
   
-  // 1. Try to get thumbnail from first line of zh.md
-  // Format: ![Thumbnail](images/media-0.png)
-  const firstLine = zhContent.split('\n')[0];
-  const thumbnailMatch = firstLine.match(/!\[.*\]\(images\/([\w\.-]+\.(?:png|jpg|jpeg|gif|webp|svg|avif))\)/i);
-  let thumbnailFile = thumbnailMatch ? thumbnailMatch[1] : null;
-
-  // 2. Fallback to file starting with 'thumb'
+  // Thumbnail detection
+  let thumbnailFile: string | null = null;
+  // 1. Cover property in frontmatter
+  if (meta.cover) {
+    const match = meta.cover.match(/images\/([\w\.-]+\.(?:png|jpg|jpeg|gif|webp|svg|avif))/i);
+    thumbnailFile = match ? match[1] : basename(meta.cover);
+  }
+  // 2. Markdown content image (prefer zh)
+  if (!thumbnailFile) {
+    const match = (zhMarkdown + indexMarkdown).match(/!\[.*\]\(images\/([\w\.-]+\.(?:png|jpg|jpeg|gif|webp|svg|avif))\)/i);
+    thumbnailFile = match ? match[1] : null;
+  }
+  // 3. Fallback to file starting with 'thumb'
   if (!thumbnailFile) {
     thumbnailFile = imageFiles.find((f) => f.startsWith('thumb')) || null;
   }
 
-  const thumbnail = thumbnailFile ? `images/${basename(productDir)}/${thumbnailFile}` : null;
+  const slug = basename(productDir);
+  const thumbnail = thumbnailFile ? `images/${slug}/${thumbnailFile}` : null;
 
-  // Find all images referenced in the description
+  // Find all images referenced across both files
   const referencedImages = new Set<string>();
   if (thumbnailFile) referencedImages.add(thumbnailFile);
   
-  // Basic regex to find images/filename.ext in the description
   const imgRegex = /images\/([\w\.-]+\.(?:png|jpg|jpeg|gif|webp|svg|avif))/gi;
   let match;
-  while ((match = imgRegex.exec(descriptionText)) !== null) {
+  const combinedMarkdown = zhMarkdown + '\n' + indexMarkdown;
+  while ((match = imgRegex.exec(combinedMarkdown)) !== null) {
     referencedImages.add(match[1]);
   }
 
   const product = {
-    id: frontmatter.id,
-    title: frontmatter.title,
+    id: String(meta.id || ''),
+    title: String(meta.title || ''),
     taglineZh,
-    votes: frontmatter.votes || 0,
-    url: frontmatter.url,
-    website: frontmatter.website,
-    date: frontmatter.date,
+    votes: Number(meta.votes || 0),
+    url: meta.url || null,
+    website: meta.website || null,
+    date: meta.date ? String(meta.date) : '',
     topicsZh,
-    isAi: frontmatter.is_ai || false,
+    isAi: meta.is_ai || false,
     thumbnail,
     descriptionHtml,
     slug: '',
