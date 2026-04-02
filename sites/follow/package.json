@@ -14,9 +14,12 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "wrangler d1 migrations apply follow-db --local",
     "db:migrate:remote": "wrangler d1 migrations apply follow-db --remote",
-    "generate-types": "wrangler types",
-    "deploy": "astro build && wrangler deploy",
-    "cf-typegen": "wrangler types"
+    "db:clean:local": "rm -rf .wrangler/state/v3/d1",
+    "db:studio": "drizzle-kit studio",
+    "db:push": "drizzle-kit push",
+    "db:check": "drizzle-kit check",
+    "cf-typegen": "wrangler types",
+    "deploy": "astro build && wrangler deploy"
   },
   "dependencies": {
     "astro": "^6.1.3"
