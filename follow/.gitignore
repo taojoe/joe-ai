@@ -12,3 +12,6 @@ Thumbs.db
 # Bun
 bun.lockb
 output/
+
+.agent
+.claude

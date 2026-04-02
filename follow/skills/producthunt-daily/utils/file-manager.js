@@ -1,6 +1,7 @@
 import { mkdirSync, existsSync, writeFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { logger } from './logger.js';
+import { fetchWithRetry } from './http-client.js';
 
 /**
  * 确保目录存在，不存在则递归创建
@@ -42,7 +43,7 @@ export function writeArticle(filePath, content, options = {}) {
  */
 export async function downloadImage(url, destPath) {
   try {
-    const response = await fetch(url);
+    const response = await fetchWithRetry(url, {}, { retries: 3, timeout: 30000 });
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     
     const arrayBuffer = await response.arrayBuffer();

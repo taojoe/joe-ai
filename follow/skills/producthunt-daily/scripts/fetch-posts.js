@@ -1,4 +1,5 @@
 import { logger } from '../utils/logger.js';
+import { fetchWithRetry } from '../utils/http-client.js';
 
 const TOKEN_URL = 'https://api.producthunt.com/v2/oauth/token';
 const GRAPHQL_URL = 'https://api.producthunt.com/v2/api/graphql';
@@ -16,7 +17,7 @@ async function getAccessToken() {
 
   logger.info('Authenticating with Product Hunt API...');
 
-  const response = await fetch(TOKEN_URL, {
+  const response = await fetchWithRetry(TOKEN_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -24,7 +25,7 @@ async function getAccessToken() {
       client_secret: clientSecret,
       grant_type: 'client_credentials'
     })
-  });
+  }, { retries: 2, timeout: 10000 });
 
   if (!response.ok) {
     const errorText = await response.text();
@@ -96,7 +97,7 @@ export async function fetchDailyPosts(dateStr) {
 
   logger.info(`Fetching featured posts for ${dateStr}...`);
 
-  const response = await fetch(GRAPHQL_URL, {
+  const response = await fetchWithRetry(GRAPHQL_URL, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -109,7 +110,7 @@ export async function fetchDailyPosts(dateStr) {
         before: postedBefore
       }
     })
-  });
+  }, { retries: 3, timeout: 20000 });
 
   if (!response.ok) {
     const errorText = await response.text();
