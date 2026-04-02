@@ -10,12 +10,16 @@
     "hacker-news": "bun run skills/hacker-news/scripts/run.js",
     "github-daily": "bun run skills/github-daily/scripts/run.js",
     "producthunt-ai": "bun run skills/producthunt-ai/scripts/run.js",
-    "producthunt-daily": "bun run skills/producthunt-daily/scripts/run.js"
+    "producthunt-daily": "bun run skills/producthunt-daily/scripts/run.js",
+    "producthunt-daily-translate": "bun run skills/producthunt-daily/scripts/translate-llm.ts"
   },
   "dependencies": {
     "@different-ai/opencode-browser": "^4.6.1",
     "cheerio": "^1.0.0",
     "handlebars": "^4.7.8",
     "rss-parser": "^3.13.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0"
   }
 }
