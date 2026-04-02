@@ -35,9 +35,8 @@ const SKIP_IMAGES = ARGS.includes('--skip-images');
 
 // --- HANDLERS ---
 
-async function handleLocalUpload(data: UploadData) {
+async function handleLocalUpload(data: UploadData, env: any) {
   console.log(`\n🔗 Connection: Local Development Proxy (${data.date})`);
-  const { env } = await getPlatformProxy();
   const db = env.FOLLOW_DB as any;
   const assets = env.FOLLOW_ASSETS as any;
 
@@ -45,7 +44,7 @@ async function handleLocalUpload(data: UploadData) {
     console.log(`📸 Uploading ${data.images.length} images to local R2...`);
     for (const img of data.images) {
       const content = await readFile(img.localPath);
-      await assets.put(img.r2Key, content);
+      await assets.put(img.r2Key, new Uint8Array(content));
       process.stdout.write('.');
     }
     console.log('\n   ✓ R2 Success');
@@ -106,18 +105,24 @@ async function main() {
 
   console.log(`📂 Found ${pendingDates.length} pending local uploads: ${pendingDates.join(', ')}`);
 
-  for (const date of pendingDates) {
-    const dataJsonPath = join(DATA_ROOT, date, 'data.json');
-    try {
-      const rawData = await readFile(dataJsonPath, 'utf-8');
-      const data: UploadData = JSON.parse(rawData);
-      
-      await handleLocalUpload(data);
-      await writeFile(join(DATA_ROOT, date, '.uploaded-local'), new Date().toISOString());
-      console.log(`   ✓ Recorded status for ${date}`);
-    } catch (e) {
-      console.error(`\n❌ Failed to upload ${date}: ${(e as Error).message}`);
+  const { env, dispose } = await getPlatformProxy();
+
+  try {
+    for (const date of pendingDates) {
+      const dataJsonPath = join(DATA_ROOT, date, 'data.json');
+      try {
+        const rawData = await readFile(dataJsonPath, 'utf-8');
+        const data: UploadData = JSON.parse(rawData);
+        
+        await handleLocalUpload(data, env);
+        await writeFile(join(DATA_ROOT, date, '.uploaded-local'), new Date().toISOString());
+        console.log(`   ✓ Recorded status for ${date}`);
+      } catch (e) {
+        console.error(`\n❌ Failed to upload ${date}: ${(e as Error).message}`);
+      }
     }
+  } finally {
+    await dispose();
   }
 
   console.log('\n✨ Local upload processing finished!\n');

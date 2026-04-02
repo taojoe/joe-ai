@@ -39,8 +39,8 @@ interface UploadData {
 const {
   CLOUDFLARE_ACCOUNT_ID,
   CLOUDFLARE_API_TOKEN,
-  D1_DATABASE_ID = 'bfd0d75c-3f43-4e4a-8f5c-8a8b8c8d8e8f',
-  R2_BUCKET_NAME = 'follow-assets'
+  D1_DATABASE_ID,
+  R2_BUCKET_NAME,
 } = process.env;
 
 const ARGS = process.argv.slice(2);
