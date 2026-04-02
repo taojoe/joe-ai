@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "follow",
+  "name": "mseries-follow",
   "compatibility_date": "2026-03-29",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "main": "@astrojs/cloudflare/entrypoints/server",
