@@ -78,39 +78,19 @@ async function parseProduct(productDir: string): Promise<{ product: Product, ref
   const topics = zhFrontmatter.topics || indexFrontmatter.topics || [];
   const topicsZh = JSON.stringify(topics);
 
-  const imagesDir = join(productDir, 'images');
-  const imageFiles = await readdir(imagesDir).catch(() => []);
-  
-  // Thumbnail detection
+  // Find only the image referenced in zh.md frontmatter cover
+  const referencedImages = new Set<string>();
   let thumbnailFile: string | null = null;
-  // 1. Cover property in frontmatter
-  if (meta.cover) {
-    const match = meta.cover.match(/images\/([\w\.-]+\.(?:png|jpg|jpeg|gif|webp|svg|avif))/i);
-    thumbnailFile = match ? match[1] : basename(meta.cover);
-  }
-  // 2. Markdown content image (prefer zh)
-  if (!thumbnailFile) {
-    const match = (zhMarkdown + indexMarkdown).match(/!\[.*\]\(images\/([\w\.-]+\.(?:png|jpg|jpeg|gif|webp|svg|avif))\)/i);
-    thumbnailFile = match ? match[1] : null;
-  }
-  // 3. Fallback to file starting with 'thumb'
-  if (!thumbnailFile) {
-    thumbnailFile = imageFiles.find((f) => f.startsWith('thumb')) || null;
+  if (zhFrontmatter.cover) {
+    const match = zhFrontmatter.cover.match(/images\/([\w\.-]+\.(?:png|jpg|jpeg|gif|webp|svg|avif))/i);
+    const fileName = match ? match[1] : basename(zhFrontmatter.cover);
+    thumbnailFile = fileName;
+    referencedImages.add(fileName);
   }
 
   const slug = basename(productDir);
   const thumbnail = thumbnailFile ? `images/${slug}/${thumbnailFile}` : null;
 
-  // Find all images referenced across both files
-  const referencedImages = new Set<string>();
-  if (thumbnailFile) referencedImages.add(thumbnailFile);
-  
-  const imgRegex = /images\/([\w\.-]+\.(?:png|jpg|jpeg|gif|webp|svg|avif))/gi;
-  let match;
-  const combinedMarkdown = zhMarkdown + '\n' + indexMarkdown;
-  while ((match = imgRegex.exec(combinedMarkdown)) !== null) {
-    referencedImages.add(match[1]);
-  }
 
   const product = {
     id: String(meta.id || ''),
