@@ -1,7 +1,7 @@
 import matter from 'gray-matter';
 import { marked } from 'marked';
 import { readdir, readFile, writeFile, mkdir, copyFile } from 'fs/promises';
-import { join, basename, dirname } from 'path';
+import { join, basename } from 'path';
 
 interface Product {
   id: string;
@@ -63,22 +63,12 @@ async function parseProduct(productDir: string): Promise<Product> {
   };
 }
 
-async function main() {
-  const ARGS = process.argv.slice(2);
-  const DATE_ARG = ARGS.find((arg) => arg.startsWith('--date='));
-
-  if (!DATE_ARG) {
-    console.error('Usage: npx tsx scripts/prepare.ts --date=YYYY-MM-DD');
-    process.exit(1);
-  }
-
-  const DATE = DATE_ARG.split('=')[1];
-  const INPUT_DIR = join(process.cwd(), '../../follow/output/producthunt-daily', DATE);
-  const TARGET_DIR = join(process.cwd(), 'data', DATE);
+async function processDate(date: string) {
+  const INPUT_DIR = join(process.cwd(), '../../follow/output/producthunt-daily', date);
+  const TARGET_DIR = join(process.cwd(), 'data', date);
   const TARGET_IMAGES_DIR = join(TARGET_DIR, 'images');
 
-  console.log('\n🏗️  Preparing Data Bundle...');
-  console.log(`   Date: ${DATE}`);
+  console.log(`\n🏗️  Processing Bundle: ${date}`);
   console.log(`   Source: ${INPUT_DIR}`);
   console.log(`   Target: ${TARGET_DIR}`);
 
@@ -116,7 +106,7 @@ async function main() {
           
           images.push({
             localPath: destPath,
-            r2Key: `producthunt/${DATE}/images/${slug}/${file}`
+            r2Key: `producthunt/${date}/images/${slug}/${file}`
           });
         }
       }
@@ -128,19 +118,58 @@ async function main() {
   // Write Data JSON
   const dataPath = join(TARGET_DIR, 'data.json');
   const outputData = {
-    date: DATE,
+    date,
     productCount: products.length,
     products,
     images
   };
   
   await writeFile(dataPath, JSON.stringify(outputData, null, 2));
-  console.log(`\n   ✓ Data bundle completed: ${TARGET_DIR}`);
-  console.log(`     - JSON: data.json`);
-  console.log(`     - Images copied: ${images.length}`);
+  console.log(`   ✓ Complete: data.json + ${images.length} images`);
+}
 
-  console.log('\n✨ Preparation complete!\n');
+async function main() {
+  const SOURCE_ROOT = join(process.cwd(), '../../follow/output/producthunt-daily');
+  const DATA_ROOT = join(process.cwd(), 'data');
+
+  console.log('\n🔍 Scanning for unprocessed dates...');
+
+  // 1. Get source dates
+  const sourceDirs = await readdir(SOURCE_ROOT, { withFileTypes: true }).catch(() => []);
+  const sourceDates = sourceDirs
+    .filter((e) => e.isDirectory())
+    .map((e) => e.name)
+    .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d))
+    .sort();
+
+  if (sourceDates.length === 0) {
+    console.error(`❌ No source dates found in ${SOURCE_ROOT}`);
+    process.exit(1);
+  }
+
+  // 2. Get processed dates
+  await mkdir(DATA_ROOT, { recursive: true });
+  const processedDirs = await readdir(DATA_ROOT, { withFileTypes: true }).catch(() => []);
+  const processedDates = processedDirs
+    .filter((e) => e.isDirectory())
+    .map((e) => e.name)
+    .sort();
+
+  // 3. Find missing
+  const missingDates = sourceDates.filter(d => !processedDates.includes(d));
+
+  if (missingDates.length === 0) {
+    console.log('✨ All dates are already processed. Nothing to do!\n');
+    return;
+  }
+
+  console.log(`📂 Found ${missingDates.length} unprocessed dates: ${missingDates.join(', ')}`);
+
+  for (const date of missingDates) {
+    await processDate(date);
+  }
+
+  console.log('\n✨ All missing bundles have been prepared!\n');
 }
 
 main().catch(console.error);
-
