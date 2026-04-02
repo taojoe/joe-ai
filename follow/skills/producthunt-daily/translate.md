@@ -14,6 +14,7 @@
 2. **提取媒体**：
    - 封面图：优先使用 `images/media-0.png` 或 `images/media-0.jpeg`，若不存在则使用 `images/thumb.png`。
 3. **内容翻译与重组**：参考模板 [examples/sample_zh.md](examples/sample_zh.md) 格式生成 `zh.md`：
+   - **Frontmatter**：完整复制 `index.md` 的 Metadata，但需将其中的 `title` 和 `tagline` 翻译为中文， 增加`cover` 字段。
    - **封面图片**：显示封面图。
    - **产品名称与标语**：显示中文翻译。
    - **核心亮点**：将 `Description` 翻译成生动的中文段落。
