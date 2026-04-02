@@ -23,7 +23,7 @@ interface ImageMetadata {
   r2Key: string;
 }
 
-async function parseProduct(productDir: string): Promise<Product> {
+async function parseProduct(productDir: string): Promise<{ product: Product, referencedImages: string[] }> {
   const indexPath = join(productDir, 'index.md');
   const zhPath = join(productDir, 'zh.md');
 
@@ -44,10 +44,32 @@ async function parseProduct(productDir: string): Promise<Product> {
 
   const imagesDir = join(productDir, 'images');
   const imageFiles = await readdir(imagesDir).catch(() => []);
-  const thumbnailFile = imageFiles.find((f) => f.startsWith('thumb'));
+  
+  // 1. Try to get thumbnail from first line of zh.md
+  // Format: ![Thumbnail](images/media-0.png)
+  const firstLine = zhContent.split('\n')[0];
+  const thumbnailMatch = firstLine.match(/!\[.*\]\(images\/([\w\.-]+\.(?:png|jpg|jpeg|gif|webp|svg|avif))\)/i);
+  let thumbnailFile = thumbnailMatch ? thumbnailMatch[1] : null;
+
+  // 2. Fallback to file starting with 'thumb'
+  if (!thumbnailFile) {
+    thumbnailFile = imageFiles.find((f) => f.startsWith('thumb')) || null;
+  }
+
   const thumbnail = thumbnailFile ? `images/${basename(productDir)}/${thumbnailFile}` : null;
 
-  return {
+  // Find all images referenced in the description
+  const referencedImages = new Set<string>();
+  if (thumbnailFile) referencedImages.add(thumbnailFile);
+  
+  // Basic regex to find images/filename.ext in the description
+  const imgRegex = /images\/([\w\.-]+\.(?:png|jpg|jpeg|gif|webp|svg|avif))/gi;
+  let match;
+  while ((match = imgRegex.exec(descriptionText)) !== null) {
+    referencedImages.add(match[1]);
+  }
+
+  const product = {
     id: frontmatter.id,
     title: frontmatter.title,
     taglineZh,
@@ -61,6 +83,8 @@ async function parseProduct(productDir: string): Promise<Product> {
     descriptionHtml,
     slug: '',
   };
+
+  return { product, referencedImages: Array.from(referencedImages) };
 }
 
 async function processDate(date: string) {
@@ -87,27 +111,29 @@ async function processDate(date: string) {
   for (const slug of productDirs) {
     const productDir = join(INPUT_DIR, slug);
     try {
-      const product = await parseProduct(productDir);
+      const { product, referencedImages } = await parseProduct(productDir);
       product.slug = slug;
       products.push(product);
 
-      // Handle Image Copying
-      const imagesSourceDir = join(productDir, 'images');
-      const imageFiles = await readdir(imagesSourceDir).catch(() => []);
-      
-      if (imageFiles.length > 0) {
+      // Handle Image Copying - ONLY referenced images
+      if (referencedImages.length > 0) {
+        const imagesSourceDir = join(productDir, 'images');
         const imagesTargetSubdir = join(TARGET_IMAGES_DIR, slug);
         await mkdir(imagesTargetSubdir, { recursive: true });
 
-        for (const file of imageFiles) {
+        for (const file of referencedImages) {
           const srcPath = join(imagesSourceDir, file);
           const destPath = join(imagesTargetSubdir, file);
-          await copyFile(srcPath, destPath);
           
-          images.push({
-            localPath: destPath,
-            r2Key: `producthunt/${date}/images/${slug}/${file}`
-          });
+          try {
+            await copyFile(srcPath, destPath);
+            images.push({
+              localPath: destPath,
+              r2Key: `producthunt/${date}/images/${slug}/${file}`
+            });
+          } catch (err) {
+            console.warn(`      ⚠️ Referenced image not found: ${file} in ${slug}`);
+          }
         }
       }
     } catch (e) {
