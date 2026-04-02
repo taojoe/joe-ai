@@ -108,7 +108,8 @@ async function main() {
 1. **内容重组**：按照提供的模板格式生成 Markdown。
 2. **语言风格**：自然、具有科技感，避免生硬。
 3. **视觉要求**：使用结构化 Markdown 和 Emoji 增加可读性。
-4. **封面图逻辑**：前端元数据的 cover 字段应指向 images/media-0.png (如果存在) 或 images/thumb.png。
+4. **封面图逻辑**：前端元数据的 cover 字段应指向 images/media-{X}.png 这样的第一个图片，如果没有这样的图片则是 images/thumb.png 这样的图片。
+5. 正文中不包含截图
 
 **输出模板参考：**
 ---
