@@ -90,12 +90,19 @@ async function main() {
   }
 
   const pendingDates: string[] = [];
+  const skippedDates: string[] = [];
   for (const date of dates) {
     const markerPath = join(DATA_ROOT, date, '.uploaded-local');
     const hasMarker = await readFile(markerPath).then(() => true).catch(() => false);
     if (!hasMarker) {
       pendingDates.push(date);
+    } else {
+      skippedDates.push(date);
     }
+  }
+
+  if (skippedDates.length > 0) {
+    console.log(`⏩ Skipping ${skippedDates.length} dates (already uploaded): ${skippedDates.join(', ')}`);
   }
 
   if (pendingDates.length === 0) {
@@ -108,7 +115,10 @@ async function main() {
   const { env, dispose } = await getPlatformProxy();
 
   try {
-    for (const date of pendingDates) {
+    for (let i = 0; i < pendingDates.length; i++) {
+      const date = pendingDates[i];
+      console.log(`\n📦 [${i + 1}/${pendingDates.length}] Processing ${date}...`);
+      
       const dataJsonPath = join(DATA_ROOT, date, 'data.json');
       try {
         const rawData = await readFile(dataJsonPath, 'utf-8');
