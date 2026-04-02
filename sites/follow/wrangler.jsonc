@@ -8,13 +8,13 @@
     {
       "binding": "FOLLOW_DB",
       "database_name": "follow-db",
-      "database_id": "bfd0d75c-3f43-4e4a-8f5c-8a8b8c8d8e8f"
+      "database_id": "239f01db-f88f-4689-8a1a-7ee7e8cfe5e2"
     }
   ],
   "r2_buckets": [
     {
       "binding": "FOLLOW_ASSETS",
-      "bucket_name": "follow-assets"
+      "bucket_name": "follow-r2"
     }
   ],
   "observability": {

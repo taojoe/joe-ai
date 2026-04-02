@@ -1,6 +1,12 @@
-import { readdir, readFile, writeFile, mkdir } from 'fs/promises';
+import { readdir, readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { execSync } from 'child_process';
+
+/**
+ * NOTE: This script uses the native Cloudflare REST API (via fetch) to execute D1 queries,
+ * avoiding the overhead of the wrangler CLI. 
+ * For R2 uploads, it currently relies on wrangler as npm was unable to install the S3 SDK.
+ */
 
 interface Product {
   id: string;
@@ -29,10 +35,16 @@ interface UploadData {
   images: ImageMetadata[];
 }
 
-// --- CONFIG ---
+// --- ENV CHECK ---
+const {
+  CLOUDFLARE_ACCOUNT_ID,
+  CLOUDFLARE_API_TOKEN,
+  D1_DATABASE_ID = 'bfd0d75c-3f43-4e4a-8f5c-8a8b8c8d8e8f',
+  R2_BUCKET_NAME = 'follow-assets'
+} = process.env;
+
 const ARGS = process.argv.slice(2);
 const SKIP_IMAGES = ARGS.includes('--skip-images');
-const R2_BUCKET_NAME = 'follow-assets';
 
 // --- UTILS ---
 
@@ -57,30 +69,58 @@ VALUES (${escapeSql(date)}, 'producthunt', ${products.length}, CURRENT_TIMESTAMP
   `.trim();
 }
 
-async function handleRemoteUpload(data: UploadData) {
-  console.log(`\n🌍 Connection: Remote Cloudflare (${data.date})`);
+/**
+ * Execute SQL on Cloudflare D1 via REST API
+ */
+async function executeD1Query(sql: string) {
+  const url = `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/d1/database/${D1_DATABASE_ID}/query`;
+  
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${CLOUDFLARE_API_TOKEN}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ sql })
+  });
 
+  const result = await response.json() as any;
+  if (!result.success) {
+    throw new Error(`D1 API Error: ${JSON.stringify(result.errors)}`);
+  }
+  return result;
+}
+
+/**
+ * Upload to R2 (Currently using wrangler as S3 SDK is unavailable)
+ */
+async function uploadToR2(img: ImageMetadata) {
+  const cmd = `wrangler r2 object put "${R2_BUCKET_NAME}/${img.r2Key}" --file="${img.localPath}"`;
+  execSync(cmd, { stdio: 'ignore' });
+}
+
+async function handleRemoteUpload(data: UploadData) {
+  console.log(`\n🌍 Cloudflare API Upload: ${data.date}`);
+
+  // 1. R2 Uploads
   if (!SKIP_IMAGES && data.images.length > 0) {
-    console.log(`📸 Uploading ${data.images.length} images to remote R2...`);
+    console.log(`📸 Uploading ${data.images.length} images to R2...`);
     for (const img of data.images) {
-      const cmd = `wrangler r2 object put "${R2_BUCKET_NAME}/${img.r2Key}" --file="${img.localPath}"`;
-      execSync(cmd, { stdio: 'ignore' });
+      await uploadToR2(img);
       process.stdout.write('.');
     }
     console.log('\n   ✓ R2 Success');
   }
 
-  console.log('💾 Generating and executing SQL on remote D1...');
+  // 2. D1 SQL Execution
+  console.log('💾 Executing SQL via Cloudflare D1 API...');
   const sql = generateSql(data.date, data.products);
-  const sqlPath = join(process.cwd(), `temp-upload-${data.date}.sql`);
-  await writeFile(sqlPath, sql);
-
+  
   try {
-    const cmd = `wrangler d1 execute follow-db --remote --file="${sqlPath}"`;
-    execSync(cmd, { stdio: 'inherit' });
+    await executeD1Query(sql);
     console.log('   ✓ D1 Success');
   } catch (e) {
-    console.error('\n❌ D1 Execution failed remotely.');
+    console.error('\n❌ D1 API Execution failed.');
     throw e;
   }
 }
@@ -88,11 +128,17 @@ async function handleRemoteUpload(data: UploadData) {
 // --- MAIN ---
 
 async function main() {
+  if (!CLOUDFLARE_ACCOUNT_ID || !CLOUDFLARE_API_TOKEN) {
+    console.error('\n❌ Missing required environment variables!');
+    console.error('   Please provide CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN.');
+    console.error('   You can run this with: CLOUDFLARE_ACCOUNT_ID=... CLOUDFLARE_API_TOKEN=... npx tsx ...');
+    process.exit(1);
+  }
+
   const DATA_ROOT = join(process.cwd(), 'data');
 
   console.log('\n🔍 Scanning for dates pending remote upload...');
 
-  // 1. Get source dates
   const dataDirs = await readdir(DATA_ROOT, { withFileTypes: true }).catch(() => []);
   const dates = dataDirs
     .filter((e) => e.isDirectory())
@@ -139,4 +185,3 @@ async function main() {
 }
 
 main().catch(console.error);
-
