@@ -1,7 +1,23 @@
+---
+name: producthunt-daily
+description: 每日抓取 Product Hunt Top 20 Featured 产品，清洗并输出为结构化 Markdown。
+---
+
 # Product Hunt Daily Skill
 
 ## 目标
 每日抓取 Product Hunt 官网上 **Top 20 Featured** 的产品，提取其核心元数据（如官网、投票数、主题标签、制作者信息），并输出为结构化的 Markdown 文件。
+
+## 用法
+
+可通过 `bun` 或 `node` 直接在项目根目录下调用入口脚本：
+
+```bash
+# 执行抓取任务（默认获取昨日数据）
+bun run producthunt-daily
+```
+
+> **注意**：脚本依赖根目录下的 `.env` 文件进行身份验证。
 
 ## 数据源
 - **API**: Product Hunt API v2 (GraphQL)

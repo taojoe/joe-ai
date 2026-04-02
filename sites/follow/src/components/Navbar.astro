@@ -2,7 +2,7 @@
 interface Props {
   currentDate?: string;
   latestDate?: string;
-  availableDates?: Array<{ date: string; productCount: number }>;
+  availableDates?: Array<{ date: string; productCount: number | null }>;
 }
 
 const { currentDate, latestDate, availableDates = [] } = Astro.props;
@@ -13,7 +13,7 @@ function formatDate(dateStr: string): string {
 }
 
 function getDatePath(date: string): string {
-  return `/archive/${date}`;
+  return `/producthunt/${date}`;
 }
 
 const today = new Date().toISOString().split('T')[0];
@@ -65,7 +65,7 @@ const isToday = currentDate === today;
                         ]}
                       >
                         <span>{formatDate(date)}</span>
-                        <span class="badge badge-ghost badge-sm">{productCount}款</span>
+                        <span class="badge badge-ghost badge-sm">{productCount ?? '?'}款</span>
                       </a>
                     </li>
                   ))}

@@ -12,7 +12,7 @@ const latestDate = await getLatestDate(db);
 const availableDates = await getAvailableDates(db);
 
 if (!latestDate) {
-  return Astro.redirect('/archive/2026-03-31');
+  return Astro.redirect('/producthunt/2026-03-31');
 }
 
 const products = await getProductsByDate(db, latestDate);

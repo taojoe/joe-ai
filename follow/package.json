@@ -9,7 +9,8 @@
     "superhuman-ai-browser": "node skills/superhuman-ai-browser/scripts/run.js",
     "hacker-news": "bun run skills/hacker-news/scripts/run.js",
     "github-daily": "bun run skills/github-daily/scripts/run.js",
-    "producthunt-ai": "bun run skills/producthunt-ai/scripts/run.js"
+    "producthunt-ai": "bun run skills/producthunt-ai/scripts/run.js",
+    "producthunt-daily": "bun run skills/producthunt-daily/scripts/run.js"
   },
   "dependencies": {
     "@different-ai/opencode-browser": "^4.6.1",
