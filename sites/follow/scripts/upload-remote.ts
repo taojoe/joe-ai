@@ -1,11 +1,13 @@
 import { readdir, readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { execSync } from 'child_process';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import Cloudflare from 'cloudflare';
 
 /**
- * NOTE: This script uses the native Cloudflare REST API (via fetch) to execute D1 queries,
- * avoiding the overhead of the wrangler CLI. 
- * For R2 uploads, it currently relies on wrangler as npm was unable to install the S3 SDK.
+ * NOTE: This script uses:
+ * 1. The official Cloudflare SDK (cloudflare) for D1 control plane queries.
+ * 2. The AWS S3 SDK (@aws-sdk/client-s3) for R2 data plane uploads (high performance).
  */
 
 interface Product {
@@ -41,7 +43,22 @@ const {
   CLOUDFLARE_API_TOKEN,
   D1_DATABASE_ID,
   R2_BUCKET_NAME,
+  R2_ACCESS_KEY_ID,
+  R2_SECRET_ACCESS_KEY,
 } = process.env;
+
+const cfClient = new Cloudflare({
+  apiToken: CLOUDFLARE_API_TOKEN,
+});
+
+const s3Client = (R2_ACCESS_KEY_ID && R2_SECRET_ACCESS_KEY) ? new S3Client({
+  region: 'auto',
+  endpoint: `https://${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  credentials: {
+    accessKeyId: R2_ACCESS_KEY_ID,
+    secretAccessKey: R2_SECRET_ACCESS_KEY,
+  },
+}) : null;
 
 const ARGS = process.argv.slice(2);
 const SKIP_IMAGES = ARGS.includes('--skip-images');
@@ -70,41 +87,43 @@ VALUES (${escapeSql(date)}, 'producthunt', ${products.length}, CURRENT_TIMESTAMP
 }
 
 /**
- * Execute SQL on Cloudflare D1 via REST API
+ * Execute SQL on Cloudflare D1 via official SDK
  */
 async function executeD1Query(sql: string) {
-  const url = `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/d1/database/${D1_DATABASE_ID}/query`;
-  
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${CLOUDFLARE_API_TOKEN}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ sql })
+  const result = await cfClient.d1.database.query(D1_DATABASE_ID as string, {
+    account_id: CLOUDFLARE_ACCOUNT_ID as string,
+    sql
   });
-
-  const result = await response.json() as any;
-  if (!result.success) {
-    throw new Error(`D1 API Error: ${JSON.stringify(result.errors)}`);
-  }
   return result;
 }
 
 /**
- * Upload to R2 (Currently using wrangler as S3 SDK is unavailable)
+ * Upload to R2 (Using AWS S3 SDK for performance)
  */
 async function uploadToR2(img: ImageMetadata) {
-  const cmd = `wrangler r2 object put "${R2_BUCKET_NAME}/${img.r2Key}" --file="${img.localPath}"`;
-  execSync(cmd, { stdio: 'ignore' });
+  if (!s3Client) {
+    // Fallback to wrangler if S3 credentials are missing
+    const cmd = `wrangler r2 object put "${R2_BUCKET_NAME}/${img.r2Key}" --file="${img.localPath}"`;
+    execSync(cmd, { stdio: 'ignore' });
+    return;
+  }
+
+  const fileContent = await readFile(img.localPath);
+  const command = new PutObjectCommand({
+    Bucket: R2_BUCKET_NAME,
+    Key: img.r2Key,
+    Body: fileContent,
+  });
+
+  await s3Client.send(command);
 }
 
 async function handleRemoteUpload(data: UploadData) {
-  console.log(`\n🌍 Cloudflare API Upload: ${data.date}`);
+  console.log(`\n🌍 Cloudflare API Connection (${data.date})`);
 
   // 1. R2 Uploads
   if (!SKIP_IMAGES && data.images.length > 0) {
-    console.log(`📸 Uploading ${data.images.length} images to R2...`);
+    console.log(`📸 Uploading ${data.images.length} images to remote R2...`);
     for (const img of data.images) {
       await uploadToR2(img);
       process.stdout.write('.');
@@ -152,12 +171,19 @@ async function main() {
   }
 
   const pendingDates: string[] = [];
+  const skippedDates: string[] = [];
   for (const date of dates) {
     const markerPath = join(DATA_ROOT, date, '.uploaded-remote');
     const hasMarker = await readFile(markerPath).then(() => true).catch(() => false);
     if (!hasMarker) {
       pendingDates.push(date);
+    } else {
+      skippedDates.push(date);
     }
+  }
+
+  if (skippedDates.length > 0) {
+    console.log(`⏩ Skipping ${skippedDates.length} dates (already uploaded to remote): ${skippedDates.join(', ')}`);
   }
 
   if (pendingDates.length === 0) {
@@ -167,7 +193,10 @@ async function main() {
 
   console.log(`📂 Found ${pendingDates.length} pending remote uploads: ${pendingDates.join(', ')}`);
 
-  for (const date of pendingDates) {
+  for (let i = 0; i < pendingDates.length; i++) {
+    const date = pendingDates[i];
+    console.log(`\n📦 [${i + 1}/${pendingDates.length}] Processing ${date}...`);
+
     const dataJsonPath = join(DATA_ROOT, date, 'data.json');
     try {
       const rawData = await readFile(dataJsonPath, 'utf-8');
