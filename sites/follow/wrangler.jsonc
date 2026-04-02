@@ -1,28 +1,31 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "mseries-follow",
-  "compatibility_date": "2026-03-29",
-  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
-  "main": "@astrojs/cloudflare/entrypoints/server",
-  "assets": {
-    "directory": "./dist",
-    "binding": "ASSETS"
-  },
-  "d1_databases": [
-    {
-      "binding": "FOLLOW_DB",
-      "database_name": "follow-db",
-      "database_id": "239f01db-f88f-4689-8a1a-7ee7e8cfe5e2"
-    }
-  ],
-  "r2_buckets": [
-    {
-      "binding": "FOLLOW_ASSETS",
-      "bucket_name": "follow-r2"
-    }
-  ],
-  "observability": {
-    "enabled": true,
-    "head_sampling_rate": 1
-  }
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "mseries-follow",
+	"compatibility_date": "2026-03-29",
+	"compatibility_flags": [
+		"nodejs_compat",
+		"global_fetch_strictly_public"
+	],
+	"main": "@astrojs/cloudflare/entrypoints/server",
+	"assets": {
+		"directory": "./dist",
+		"binding": "ASSETS"
+	},
+	"d1_databases": [
+		{
+			"binding": "FOLLOW_DB",
+			"database_name": "follow-db",
+			"database_id": "239f01db-f88f-4689-8a1a-7ee7e8cfe5e2"
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "FOLLOW_ASSETS",
+			"bucket_name": "follow-r2"
+		}
+	],
+	"observability": {
+		"enabled": true,
+		"head_sampling_rate": 1
+	}
 }
