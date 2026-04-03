@@ -62,6 +62,7 @@ const s3Client = (R2_ACCESS_KEY_ID && R2_SECRET_ACCESS_KEY) ? new S3Client({
 
 const ARGS = process.argv.slice(2);
 const SKIP_IMAGES = ARGS.includes('--skip-images');
+const FORCE = ARGS.includes('--force');
 
 // --- UTILS ---
 
@@ -70,20 +71,16 @@ function escapeSql(str: string | null): string {
   return `'${str.replace(/'/g, "''")}'`;
 }
 
-function generateSql(date: string, products: Product[]): string {
+function generateSql(date: string, products: Product[]): string[] {
   const values = products.map((p, index) => {
     const rank = index + 1;
     return `(${escapeSql(p.id)}, ${escapeSql(date)}, ${rank}, ${escapeSql(p.slug)}, ${escapeSql(p.title)}, ${escapeSql(p.taglineZh)}, ${p.votes}, ${escapeSql(p.url)}, ${escapeSql(p.website)}, ${escapeSql(p.topicsZh)}, ${p.isAi ? 1 : 0}, ${escapeSql(p.thumbnail)}, ${escapeSql(p.descriptionHtml)})`;
   }).join(',\n');
 
-  return `
-INSERT OR REPLACE INTO ph_products (id, date, rank, slug, title, tagline_zh, votes, url, website, topics_zh, is_ai, thumbnail, description_html)
-VALUES
-${values};
-
-INSERT OR REPLACE INTO ph_dates (date, source, product_count, created_at)
-VALUES (${escapeSql(date)}, 'producthunt', ${products.length}, CURRENT_TIMESTAMP);
-  `.trim();
+  return [
+    `INSERT OR REPLACE INTO ph_products (id, date, rank, slug, title, tagline_zh, votes, url, website, topics_zh, is_ai, thumbnail, description_html) VALUES ${values};`,
+    `INSERT OR REPLACE INTO ph_dates (date, source, product_count, created_at) VALUES (${escapeSql(date)}, 'producthunt', ${products.length}, CURRENT_TIMESTAMP);`
+  ];
 }
 
 /**
@@ -103,8 +100,13 @@ async function executeD1Query(sql: string) {
 async function uploadToR2(img: ImageMetadata) {
   if (!s3Client) {
     // Fallback to wrangler if S3 credentials are missing
-    const cmd = `wrangler r2 object put "${R2_BUCKET_NAME}/${img.r2Key}" --file="${img.localPath}"`;
-    execSync(cmd, { stdio: 'ignore' });
+    const cmd = `npx wrangler r2 object put "${R2_BUCKET_NAME}/${img.r2Key}" --file="${img.localPath}" --remote`;
+    try {
+      execSync(cmd, { stdio: 'inherit' });
+    } catch (e) {
+      console.error(`\n❌ Wrangler upload failed: ${img.r2Key}`);
+      throw e;
+    }
     return;
   }
 
@@ -133,10 +135,12 @@ async function handleRemoteUpload(data: UploadData) {
 
   // 2. D1 SQL Execution
   console.log('💾 Executing SQL via Cloudflare D1 API...');
-  const sql = generateSql(data.date, data.products);
+  const sqls = generateSql(data.date, data.products);
   
   try {
-    await executeD1Query(sql);
+    for (const sql of sqls) {
+      await executeD1Query(sql);
+    }
     console.log('   ✓ D1 Success');
   } catch (e) {
     console.error('\n❌ D1 API Execution failed.');
@@ -175,7 +179,7 @@ async function main() {
   for (const date of dates) {
     const markerPath = join(DATA_ROOT, date, '.uploaded-remote');
     const hasMarker = await readFile(markerPath).then(() => true).catch(() => false);
-    if (!hasMarker) {
+    if (!hasMarker || FORCE) {
       pendingDates.push(date);
     } else {
       skippedDates.push(date);
