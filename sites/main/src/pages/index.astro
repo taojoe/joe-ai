@@ -1,11 +1,75 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+// 这里目前是静态数据，符合你对“不需要动态”的要求
+const tools = [
+  {
+    title: "Product Hunt Daily",
+    description: "每日下午 5 点前更新。通过 AI 自动化分析与翻译，精选 Product Hunt 当天最值得关注的全球热门产品。",
+    tag: "AI 抓取",
+    link: "/ph-daily", // 假设是内部路径，或者你可以直接换成外部 URL
+    icon: "🚀"
+  }
+];
 ---
 
 <Layout>
-	<Welcome />
+	<main class="min-h-screen p-6 md:p-12 max-w-7xl mx-auto">
+		<!-- 页头：手绘风格的 Joe-AI Logo -->
+		<header class="mb-12 border-b-4 border-black pb-4">
+			<h1 class="text-5xl md:text-6xl font-hand tracking-tighter">
+				JOE-AI <span class="text-gray-400">/</span> 入口
+			</h1>
+			<p class="mt-2 text-lg font-medium">所有极简且实用的 AI 工具都在这里。</p>
+		</header>
+
+		<!-- 工具卡片网格 -->
+		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+			{tools.map(tool => (
+				<a 
+					href={tool.link} 
+					class="excalibox excalibox-hover excalibox-active excalibox-shadow p-6 flex flex-col justify-between"
+				>
+					<div>
+						<div class="flex justify-between items-start mb-4">
+							<span class="text-4xl">{tool.icon}</span>
+							<span class="border-2 border-black px-3 py-1 text-xs font-bold uppercase tracking-widest bg-yellow-200">
+								{tool.tag}
+							</span>
+						</div>
+						<h2 class="text-2xl font-hand mb-2 leading-tight">
+							{tool.title}
+						</h2>
+						<p class="text-gray-700 leading-relaxed text-sm">
+							{tool.description}
+						</p>
+					</div>
+					
+					<!-- 卡片底部的“手绘链接”装饰 -->
+					<div class="mt-6 flex items-center gap-2 group">
+						<span class="font-bold underline decoration-2 underline-offset-4 group-hover:no-underline">
+							立即查看
+						</span>
+						<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+							<path d="M5 12h14M12 5l7 7-7 7"/>
+						</svg>
+					</div>
+				</a>
+			))}
+			
+			<!-- AI 待办占位 - 营造一种不断更新的“手写草图”感 -->
+			<div class="excalibox border-dashed border-gray-300 bg-gray-50 p-6 flex items-center justify-center opacity-40">
+				<p class="font-hand text-xl text-gray-500 italic">更多 AI 工具正在酝酿中...</p>
+			</div>
+		</div>
+
+		<!-- 页脚 -->
+		<footer class="mt-20 pt-8 border-t-2 border-dashed border-black">
+			<p class="text-sm font-hand">© {new Date().getFullYear()} Joe-AI - 手绘于地球。🌍</p>
+		</footer>
+	</main>
 </Layout>
+
+<style>
+	/* 可以在这里添加一些针对特定页面的手绘微调 */
+</style>

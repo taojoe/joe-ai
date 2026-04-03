@@ -1,0 +1,49 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+@theme {
+  --font-hand: "Indie Flower", cursive;
+  --color-canvas: #f9fafb;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-canvas);
+    color: #1a1a1a;
+  }
+  
+  h1, h2, h3, .font-hand {
+    font-family: var(--font-hand);
+  }
+}
+
+@layer utilities {
+  /* 核心手绘风格卡片 */
+  .excalibox {
+    border: 3px solid #000;
+    transition: all 0.1s ease-out;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .excalibox-shadow {
+    box-shadow: 4px 4px 0px 0px #000;
+  }
+
+  /* 悬停时的硬阴影加深和位移 */
+  .excalibox-hover:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 7px 7px 0px 0px #000;
+  }
+
+  /* 点击时的下沉感 */
+  .excalibox-active:active {
+    transform: translate(2px, 2px);
+    box-shadow: 0px 0px 0px 0px #000;
+  }
+  
+  /* 模拟手绘的不规则边缘微抖动 */
+  .sketch-edge {
+    border-radius: 2px 4px 2px 6px / 4px 2px 6px 2px;
+  }
+}
