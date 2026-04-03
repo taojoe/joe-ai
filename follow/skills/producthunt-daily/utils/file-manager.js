@@ -39,9 +39,18 @@ export function writeArticle(filePath, content, options = {}) {
  * 下载并保存图片
  * @param {string} url - 图片 URL
  * @param {string} destPath - 目标保存路径
+ * @param {object} options - 选项
+ * @param {boolean} options.overwrite - 是否覆盖已存在的文件
  * @returns {Promise<boolean>} 是否成功
  */
-export async function downloadImage(url, destPath) {
+export async function downloadImage(url, destPath, options = {}) {
+  const { overwrite = false } = options;
+
+  if (existsSync(destPath) && !overwrite) {
+    // logger.skip(`Image already exists: ${destPath}`); // Keep it quiet or let caller log
+    return true;
+  }
+
   try {
     const response = await fetchWithRetry(url, {}, { retries: 3, timeout: 30000 });
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);

@@ -83,9 +83,13 @@ async function main() {
 
             // 下载图片
             if (imageTasks.length > 0) {
-                logger.info(`Downloading ${imageTasks.length} images...`);
+                logger.info(`Checking ${imageTasks.length} images...`);
                 for (const task of imageTasks) {
                     const destPath = join(imageDir, task.localName);
+                    if (existsSync(destPath)) {
+                        logger.skip(`[IMAGE EXISTS] ${task.localName}`);
+                        continue;
+                    }
                     await downloadImage(task.url, destPath);
                 }
             }
