@@ -32,8 +32,17 @@ async function main() {
   logger.divider();
 
   // 1. 确定日期
-  const dateStr = getDateString(); // 默认昨日
-  logger.info(`Target Date: ${dateStr} (Yesterday)`);
+  let dateStr = process.argv[2];
+  if (dateStr) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        logger.error(`Invalid date format: ${dateStr}. Expected YYYY-MM-DD`);
+        process.exit(1);
+    }
+    logger.info(`Target Date: ${dateStr} (User specified)`);
+  } else {
+    dateStr = getDateString(); // 默认昨日
+    logger.info(`Target Date: ${dateStr} (Yesterday)`);
+  }
 
   // 2. 确定根目录
   const outputRoot = join(__dirname, '..', config.output.dir);
