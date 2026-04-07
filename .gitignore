@@ -1,1 +1,24 @@
+# dependencies
+node_modules
+.pnpm-debug.log*
+
+# build artifacts
+dist
+.next
+.astro
+.turbo
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env*.local
+
+# misc
 .DS_Store
+*.pem
+
+# wrangler
+.wrangler
