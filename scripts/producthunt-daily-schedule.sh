@@ -28,5 +28,5 @@ pnpm run prepare >> "$LOG_FILE" 2>&1
 pnpm run upload:remote >> "$LOG_FILE" 2>&1
 
 # If execution reaches here, all tasks succeeded
-osascript -e 'display notification "所有的任务都执行完毕了！" with title "ProductHunt 定时任务" sound name "Glass"' >> "$LOG_FILE" 2>&1
+# osascript -e 'display notification "所有的任务都执行完毕了！" with title "ProductHunt 定时任务" sound name "Glass"' >> "$LOG_FILE" 2>&1
 echo "--- Completed successfully at $(date) ---" >> "$LOG_FILE"
