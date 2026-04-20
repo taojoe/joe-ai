@@ -111,7 +111,7 @@ async function parseProduct(productDir: string): Promise<{ product: Product, ref
 }
 
 async function processDate(date: string) {
-  const INPUT_DIR = join(process.cwd(), '../../follow/output/producthunt-daily', date);
+  const INPUT_DIR = join(process.cwd(), '../../agents/follow/output/producthunt-daily', date);
   const TARGET_DIR = join(process.cwd(), 'data', date);
   const TARGET_IMAGES_DIR = join(TARGET_DIR, 'images');
 
