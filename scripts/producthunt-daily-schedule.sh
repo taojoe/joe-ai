@@ -6,7 +6,7 @@ export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$HOME/.local/bin:$HOME/.opencode/bin:$PATH"
 
-WORKSPACE="/Users/tao/workspace/project/joe-ai"
+WORKSPACE="$(cd "$(dirname "$0")/.." && pwd)"
 
 # Exit immediately if a command exits with a non-zero status, handling failures automatically
 set -e
