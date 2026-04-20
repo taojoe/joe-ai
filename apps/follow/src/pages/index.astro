@@ -33,7 +33,7 @@ function formatDate(dateStr: string): string {
       <h1 class="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-ph-orange to-amber-500 bg-clip-text text-transparent">
         🚀 Product Hunt 每日精选
       </h1>
-      <p class="text-xl text-gray-400">
+      <p class="text-xl text-base-content/70">
         {formatDate(latestDate)} · {products.length} 款产品
       </p>
     </header>
@@ -51,7 +51,7 @@ function formatDate(dateStr: string): string {
     )}
   </main>
 
-  <footer class="mt-20 py-8 border-t border-base-300 text-center text-gray-500 text-sm">
+  <footer class="mt-20 py-8 border-t border-base-300 text-center text-base-content/50 text-sm">
     <p>Powered by Product Hunt API · Built with Astro + Cloudflare</p>
   </footer>
 </BaseLayout>
