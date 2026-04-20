@@ -10,9 +10,9 @@ import {
 } from "../../lib/db";
 import { env } from "cloudflare:workers";
 
-const { date } = Astro.params;
+const { date_str } = Astro.params;
 
-if (!date) {
+if (!date_str) {
   return Astro.redirect("/");
 }
 
@@ -23,9 +23,9 @@ const [latestDate, availableDates] = await Promise.all([
   getAvailableDates(db),
 ]);
 
-const products = await getProductsByDate(db, date);
+const products = await getProductsByDate(db, date_str);
 
-const imageBaseUrl = `/api/images/producthunt/${date}`;
+const imageBaseUrl = `/api/images/producthunt/${date_str}`;
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr);
@@ -37,9 +37,9 @@ function formatDate(dateStr: string): string {
 }
 ---
 
-<BaseLayout title={`${date} Product Hunt 精选`}>
+<BaseLayout title={`${date_str} Product Hunt 精选`}>
   <Navbar
-    currentDate={date}
+    currentDate={date_str}
     latestDate={latestDate}
     availableDates={availableDates}
   />
@@ -52,7 +52,7 @@ function formatDate(dateStr: string): string {
         🚀 Product Hunt 精选
       </h1>
       <p class="text-xl text-base-content/70">
-        {formatDate(date)} · {products.length} 款产品
+        {formatDate(date_str)} · {products.length} 款产品
       </p>
     </header>
 
