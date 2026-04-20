@@ -181,7 +181,7 @@ async function main() {
   const SOURCE_ROOT = join(process.cwd(), '../../agents/follow/output/producthunt-daily');
   const DATA_ROOT = join(process.cwd(), 'data');
 
-  console.log('\n🔍 Scanning for unprocessed dates...');
+  console.log(`\n🔍 Scanning for unprocessed dates... ${SOURCE_ROOT}`);
 
   // 1. Get source dates
   const sourceDirs = await readdir(SOURCE_ROOT, { withFileTypes: true }).catch(() => []);
