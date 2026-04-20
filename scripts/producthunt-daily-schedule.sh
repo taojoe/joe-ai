@@ -24,7 +24,7 @@ pnpm run producthunt-daily-translate >> "$LOG_FILE" 2>&1
 # Step 2: apps/follow
 cd "$WORKSPACE/apps/follow"
 echo "Running apps/follow tasks..." >> "$LOG_FILE"
-pnpm run prepare >> "$LOG_FILE" 2>&1
+pnpm run prepare-db >> "$LOG_FILE" 2>&1
 pnpm run upload:remote >> "$LOG_FILE" 2>&1
 
 # If execution reaches here, all tasks succeeded
