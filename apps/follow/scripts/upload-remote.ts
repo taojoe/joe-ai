@@ -98,10 +98,12 @@ async function executeD1Query(sql: string) {
  * Upload to R2 (Using AWS S3 SDK for performance)
  */
 async function uploadToR2(img: ImageMetadata) {
+  console.log(`uploading ${img.localPath} to ${img.r2Key}`);
   if (!s3Client) {
+    console.log('❌ Missing R2 credentials in environment variables!');
     throw new Error('❌ Missing R2 credentials in environment variables!');
   }
-  console.log(`uploading ${img.localPath} to ${img.r2Key}`)
+
   /*
   if (!s3Client) {
     // Fallback to wrangler if S3 credentials are missing
