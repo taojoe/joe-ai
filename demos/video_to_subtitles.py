@@ -20,24 +20,30 @@ def format_timestamp(seconds):
     millis = int((seconds * 1000) % 1000)
     return f"{hours:02}:{minutes:02}:{secs:02},{millis:03}"
 
-def generate_srt(aligned_results, output_path):
-    print(f"Generating SRT file at {output_path}...")
-    output_dir = os.path.dirname(output_path)
+def generate_outputs(items, srt_output_path):
+    txt_output_path = os.path.splitext(srt_output_path)[0] + ".txt"
+    print(f"Generating SRT file at {srt_output_path} and TXT file at {txt_output_path}...")
+    output_dir = os.path.dirname(srt_output_path)
     if output_dir:
         os.makedirs(output_dir, exist_ok=True)
-    with open(output_path, "w", encoding="utf-8") as f:
+        
+    with open(srt_output_path, "w", encoding="utf-8") as f_srt, open(txt_output_path, "w", encoding="utf-8") as f_txt:
         # Group word-level results into phrases/sentences if needed
         # For simplicity, we can do one word per subtitle or group every few words
         group_size = 5
-        for i in range(0, len(aligned_results), group_size):
-            chunk = aligned_results[i : i + group_size]
+        for i in range(0, len(items), group_size):
+            chunk = items[i : i + group_size]
             start_time = format_timestamp(chunk[0].start_time)
             end_time = format_timestamp(chunk[-1].end_time)
             text = " ".join([w.text for w in chunk])
             
-            f.write(f"{(i // group_size) + 1}\n")
-            f.write(f"{start_time} --> {end_time}\n")
-            f.write(f"{text}\n\n")
+            # Write to SRT
+            f_srt.write(f"{(i // group_size) + 1}\n")
+            f_srt.write(f"{start_time} --> {end_time}\n")
+            f_srt.write(f"{text}\n\n")
+            
+            # Write plain text
+            f_txt.write(f"{text}\n")
 
 def main():
     parser = argparse.ArgumentParser(description="Video Subtitle Recognition using Qwen3-ASR and ForcedAligner")
@@ -90,8 +96,8 @@ def main():
         alignment_lang = args.lang or detected_lang
         alignment_results = aligner.align(audio=audio_path, text=transcript, language=alignment_lang)
 
-        # 4. Generate SRT
-        generate_srt(alignment_results[0].items, args.output)
+        # 4. Generate SRT and TXT
+        generate_outputs(alignment_results[0].items, args.output)
         
         print("Process complete!")
 
