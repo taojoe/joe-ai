@@ -3,10 +3,13 @@
 # Define environment variables to ensure cron finds node and pnpm
 export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 
+echo "set PATH"
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$HOME/.local/bin:$HOME/.opencode/bin:$PATH"
+echo "set PATH DONE"
 
 WORKSPACE="$(cd "$(dirname "$0")/.." && pwd)"
+echo "current workspace $WORKSPACE"
 
 # Exit immediately if a command exits with a non-zero status, handling failures automatically
 set -e
