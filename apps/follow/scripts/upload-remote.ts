@@ -99,6 +99,11 @@ async function executeD1Query(sql: string) {
  */
 async function uploadToR2(img: ImageMetadata) {
   if (!s3Client) {
+    throw new Error('❌ Missing R2 credentials in environment variables!');
+  }
+  console.log(`uploading ${img.localPath} to ${img.r2Key}`)
+  /*
+  if (!s3Client) {
     // Fallback to wrangler if S3 credentials are missing
     const cmd = `npx wrangler r2 object put "${R2_BUCKET_NAME}/${img.r2Key}" --file="${img.localPath}" --remote`;
     try {
@@ -109,6 +114,7 @@ async function uploadToR2(img: ImageMetadata) {
     }
     return;
   }
+    */
 
   const fileContent = await readFile(img.localPath);
   const command = new PutObjectCommand({
